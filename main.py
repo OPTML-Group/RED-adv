@@ -15,6 +15,7 @@ delta_name = "data.pt"
 label_name = "label.pt"
 files = ['data.pt', 'label.pt']
 
+
 def main():
     args = arg_parser.parse_args()
     dir = args.dataset_dir
@@ -40,18 +41,18 @@ def main():
     test_loader = torch.utils.data.DataLoader(
         test_set, batch_size=args.batch_size, shuffle=False)
 
-    model = models.Net(num_channels=n_channels, num_classes=3, num_outputs=n_outputs).cuda()
+    model = models.Net(num_channels=n_channels, num_classes=3,
+                       num_outputs=n_outputs).cuda()
 
     criterion = nn.CrossEntropyLoss(reduction="none")
     optimizer, scheduler = trainer.get_optimizer_and_scheduler(model, args)
-
 
     for epoch in range(args.epochs):
         start_time = time.time()
         print(optimizer.state_dict()['param_groups'][0]['lr'])
 
         trainer.train_epoch(train_loader, model,
-              criterion, optimizer, epoch, args)
+                            criterion, optimizer, epoch, args)
 
         scheduler.step()
         print("one epoch duration:{}".format(time.time()-start_time))
@@ -59,6 +60,7 @@ def main():
         acc = trainer.validate(test_loader, model, criterion, args)
 
     acc = trainer.validate(test_loader, model, criterion, args)
+
 
 if __name__ == "__main__":
     main()
