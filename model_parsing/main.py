@@ -4,7 +4,6 @@ import time
 import torch
 import torch.nn as nn
 
-
 import utils
 import models
 import trainer
@@ -14,7 +13,6 @@ adv_name = "xs.pt"
 delta_name = "data.pt"
 label_name = "label.pt"
 files = ['data.pt', 'label.pt']
-
 
 def main():
     args = arg_parser.parse_args()
@@ -60,7 +58,6 @@ def main():
         acc = trainer.validate(test_loader, model, criterion, args)
 
     acc = trainer.validate(test_loader, model, criterion, args)
-
 
 if __name__ == "__main__":
     main()
