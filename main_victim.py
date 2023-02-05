@@ -16,7 +16,7 @@ from models import ResNet9
 from pruner import remove_prune, check_sparsity, prune_model_custom, pruning_model_structured, pruning_model, extract_mask
 
 def main():
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args_victim_training()
     set_seed(args.seed)
     loader = CIFAR10(dir = args.dir, batch_size = args.batch_size)
     model = ResNet9(num_classes = args.num_classes, kernel_size = args.kernel_size)

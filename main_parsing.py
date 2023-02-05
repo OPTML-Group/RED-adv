@@ -4,7 +4,6 @@ import time
 import torch
 import torch.nn as nn
 
-
 import utils
 import models
 import trainer
@@ -17,7 +16,7 @@ files = ['data.pt', 'label.pt']
 
 
 def main():
-    args = arg_parser.parse_args()
+    args = arg_parser.parse_args_model_parsing()
     dir = args.dataset_dir
 
     if args.input_type == "x_adv":
@@ -41,8 +40,8 @@ def main():
     test_loader = torch.utils.data.DataLoader(
         test_set, batch_size=args.batch_size, shuffle=False)
 
-    model = models.Net(num_channels=n_channels, num_classes=3,
-                       num_outputs=n_outputs).cuda()
+    model = models.ConvNet(num_channels=n_channels, num_classes=3,
+                           num_outputs=n_outputs).cuda()
 
     criterion = nn.CrossEntropyLoss(reduction="none")
     optimizer, scheduler = trainer.get_optimizer_and_scheduler(model, args)
@@ -60,6 +59,7 @@ def main():
         acc = trainer.validate(test_loader, model, criterion, args)
 
     acc = trainer.validate(test_loader, model, criterion, args)
+
 
 if __name__ == "__main__":
     main()

@@ -6,6 +6,16 @@ import random
 import numpy as np
 
 
+def set_seed(seed):
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    np.random.seed(seed)
+    random.seed(seed)
+
+
 def count_element(arr):
     keys = torch.unique(arr)
     cnt = []
@@ -67,6 +77,7 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+
 # Feb. 5, 2023 version
 def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5):
     command_dir = os.path.join("commands", suffix)
@@ -81,7 +92,8 @@ def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5):
 
     stop_path = os.path.join('commands', 'stop_{}.sh'.format(suffix))
     with open(stop_path, 'w') as fout:
-        print("kill $(ps aux|grep 'bash " + command_dir + "'|awk '{print $2}')", file=fout)
+        print("kill $(ps aux|grep 'bash " + command_dir +
+              "'|awk '{print $2}')", file=fout)
 
     n_gpu = len(gpus)
     for i, gpu in enumerate(gpus):
