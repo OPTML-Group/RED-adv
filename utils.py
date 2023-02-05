@@ -67,20 +67,21 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
-
-def run_commands(gpus, commands, call=False, dir="commands", shuffle=True, delay=0.5):
+# Feb. 5, 2023 version
+def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5):
+    command_dir = os.path.join("commands", suffix)
     if len(commands) == 0:
         return
-    if os.path.exists(dir):
-        shutil.rmtree(dir)
+    if os.path.exists(command_dir):
+        shutil.rmtree(command_dir)
     if shuffle:
         random.shuffle(commands)
         random.shuffle(gpus)
-    os.makedirs(dir, exist_ok=True)
+    os.makedirs(command_dir, exist_ok=True)
 
-    fout = open('stop_{}.sh'.format(dir), 'w')
-    print("kill $(ps aux|grep 'bash " + dir + "'|awk '{print $2}')", file=fout)
-    fout.close()
+    stop_path = os.path.join('commands', 'stop_{}.sh'.format(suffix))
+    with open(stop_path, 'w') as fout:
+        print("kill $(ps aux|grep 'bash " + command_dir + "'|awk '{print $2}')", file=fout)
 
     n_gpu = len(gpus)
     for i, gpu in enumerate(gpus):
@@ -89,7 +90,7 @@ def run_commands(gpus, commands, call=False, dir="commands", shuffle=True, delay
             continue
         prefix = "CUDA_VISIBLE_DEVICES={} ".format(gpu)
 
-        sh_path = os.path.join(dir, "run{}.sh".format(i))
+        sh_path = os.path.join(command_dir, "run{}.sh".format(i))
         fout = open(sh_path, 'w')
         for com in i_commands:
             print(prefix + com, file=fout)
