@@ -13,7 +13,7 @@ from torch.nn import CrossEntropyLoss
 from utils import set_seed
 from datasets import CIFAR10
 from models import ResNet9
-from pruner import remove_prune, check_sparsity, prune_model_custom, pruning_model_structured, pruning_model, extract_mask
+from pruner.pruner import remove_prune, check_sparsity, prune_model_custom, pruning_model_structured, pruning_model, extract_mask
 
 def main():
     args = arg_parser.parse_args_victim_training()
@@ -23,7 +23,7 @@ def main():
     model = model.to(memory_format=torch.channels_last).cuda()
 
     opt = SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
-    iters_per_epoch = 50000 // args.batch_size
+    iters_per_epoch = len(loader["train"])
     lr_schedule = np.interp(np.arange((args.epochs + 1) * iters_per_epoch),\
          [0, 5 * iters_per_epoch, args.epochs * iters_per_epoch], [0, 1, 0])
     scheduler = lr_scheduler.LambdaLR(opt, lr_schedule.__getitem__)

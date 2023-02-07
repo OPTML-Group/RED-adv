@@ -5,26 +5,21 @@ import torch as ch
 import torchvision
 from torch.cuda.amp import GradScaler, autocast  # type: ignore
 from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, lr_scheduler
 
 from ffcv.fields import IntField, RGBImageField
 from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
 from ffcv.loader import Loader, OrderOption
 from ffcv.pipeline.operation import Operation
-from ffcv.transforms import RandomHorizontalFlip, Cutout, \
-    RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
+from ffcv.transforms import Convert, ToDevice, ToTensor, ToTorchImage
 from ffcv.transforms.common import Squeeze
 from ffcv.writer import DatasetWriter
 
 import argparse
 import time
-from copy import deepcopy
 import os
 import numpy as np
-from tqdm import tqdm
 
-from pruner import extract_mask, prune_model_custom, pruning_model, pruning_model_structured, remove_prune, check_sparsity
-from PGD import PGD, PGD_l2
+from attacks.PGD import PGD, PGD_l2
 
 start = time.time()
 
