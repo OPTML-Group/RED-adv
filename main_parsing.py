@@ -1,8 +1,6 @@
 import os
-import time
 
 import torch
-import torch.nn as nn
 
 import utils
 import models
@@ -34,31 +32,19 @@ def main():
     train_set, test_set = utils.get_datasets_from_tensor_with_cnt(
         data, label, cnt, cuda=True)
 
-    train_loader = torch.utils.data.DataLoader(
-        train_set, batch_size=args.batch_size, shuffle=True)
-
-    test_loader = torch.utils.data.DataLoader(
+    loaders = {
+        "train": torch.utils.data.DataLoader(
+        train_set, batch_size=args.batch_size, shuffle=True),
+        "test": torch.utils.data.DataLoader(
         test_set, batch_size=args.batch_size, shuffle=False)
+    }
 
     model = models.ConvNet(num_channels=n_channels, num_classes=3,
                            num_outputs=n_outputs).cuda()
 
-    criterion = nn.CrossEntropyLoss(reduction="none")
-    optimizer, scheduler = trainer.get_optimizer_and_scheduler(model, args)
-
-    for epoch in range(args.epochs):
-        start_time = time.time()
-        print(optimizer.state_dict()['param_groups'][0]['lr'])
-
-        trainer.train_epoch(train_loader, model,
-                            criterion, optimizer, epoch, args)
-
-        scheduler.step()
-        print("one epoch duration:{}".format(time.time()-start_time))
-
-        acc = trainer.validate(test_loader, model, criterion, args)
-
-    acc = trainer.validate(test_loader, model, criterion, args)
+    train_tools = trainer.get_training_tools(model, args)
+    
+    trainer.train_with_rewind(model, loaders, train_tools, args)
 
 
 if __name__ == "__main__":

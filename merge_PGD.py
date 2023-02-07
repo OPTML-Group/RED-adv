@@ -1,31 +1,10 @@
-from sys import _current_frames
-from typing import List
-
 import torch as ch
-import torchvision
-from torch.cuda.amp import GradScaler, autocast  # type: ignore
-from torch.nn import CrossEntropyLoss
-from torch.optim import SGD, lr_scheduler
-
-from ffcv.fields import IntField, RGBImageField
-from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
-from ffcv.loader import Loader, OrderOption
-from ffcv.pipeline.operation import Operation
-from ffcv.transforms import RandomHorizontalFlip, Cutout, \
-    RandomTranslate, Convert, ToDevice, ToTensor, ToTorchImage
-from ffcv.transforms.common import Squeeze
-from ffcv.writer import DatasetWriter
+from torch.cuda.amp import autocast  # type: ignore
 
 import argparse
-import time
-from copy import deepcopy
 import os
 import numpy as np
-from tqdm import tqdm
 
-
-from prune.pruner import extract_mask, prune_model_custom, pruning_model, pruning_model_structured, remove_prune, check_sparsity
-from PGD import PGD
 
 parser = argparse.ArgumentParser(description='CIFAR-10 training')
 # parser.add_argument('--num_resnet_layer', type=int, default=20)
