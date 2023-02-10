@@ -6,6 +6,23 @@ import random
 import numpy as np
 
 
+def plot_tensorboard(writer, path, obj, idx, labels=None):
+    if isinstance(obj, dict):
+        writer.add_scalars(path, obj, idx)
+    elif type(obj) in np.ScalarType:
+        writer.add_scalar(path, obj, idx)
+    elif isinstance(obj, np.ndarray) or torch.is_tensor(obj):
+        assert obj.ndim == 1
+        if labels is None:
+            n_item = len(obj)
+            labels = [str(i+1) for i in range(n_item)]
+        dic = {labels[i]: item for i, item in enumerate(obj)}
+        writer.add_scalars(path, dic, idx)
+    else:
+        raise NotImplemented(
+            "Type {} plotting is not implemented!".format(type(obj)))
+
+
 def set_seed(seed):
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
