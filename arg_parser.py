@@ -15,7 +15,7 @@ def parse_args_model_parsing():
     # parser.add_argument('--checkpoint', type=str,
     #                     default=None, help='checkpoint file')
     parser.add_argument(
-        '--save_dir', help='The directory used to save the trained models', default="./", type=str)
+        '--save_dir', help='The directory used to save the trained models', default="./results/", type=str)
     # parser.add_argument('--mask', type=str, default=None, help='sparse model')
 
     ##################################### Training setting #################################################

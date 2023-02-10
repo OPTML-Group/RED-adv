@@ -7,10 +7,9 @@ import models
 import trainer
 import arg_parser
 
-adv_name = "xs.pt"
-delta_name = "data.pt"
-label_name = "label.pt"
-files = ['data.pt', 'label.pt']
+adv_name = "x_adv.pt"
+delta_name = "delta.pt"
+label_name = "attr_labels.pt"
 
 
 def main():
@@ -23,8 +22,15 @@ def main():
         suffix = delta_name
     else:
         exit(0)
-    data = torch.load(os.path.join(dir, suffix)).float()
-    label = torch.load(os.path.join(dir, label_name)).long()
+
+    with torch.no_grad():
+        data = torch.load(os.path.join(dir, suffix)).float()
+        mean = torch.mean(data, dim=[0, 2, 3])
+        std = torch.std(data, dim=[0, 2, 3])
+        print(mean, std)
+        data = ((data - mean[:, None, None]) / std[:, None, None]).detach()
+        label = torch.load(os.path.join(dir, label_name)).long().detach()
+
     n_channels = data.shape[1]
     n_outputs = label.shape[1]
 

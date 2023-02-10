@@ -4,24 +4,29 @@ import copy
 import time
 import tqdm
 import utils
+import shutil
 
 import torch
+from torch.utils import tensorboard
 
-def get_training_tools(model, args):
+
+def get_training_tools(model, args, scaler=False):
     optimizer = torch.optim.SGD(model.parameters(), args.lr,
                                 momentum=args.momentum,
                                 weight_decay=args.weight_decay)
     scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
         optimizer, T_max=args.epochs)
-    scaler = torch.cuda.amp.GradScaler()
+    scaler = None
+    if scaler:
+        scaler = torch.cuda.amp.GradScaler()
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
+    writer = None
     if args.tensorboard:
         log_dir = os.path.join(args.save_dir, "tensorboard")
-        writer = torch.utils.tensorboard.SummaryWriter(log_dir = log_dir)
-    else:
-        writer = None
+        shutil.rmtree(log_dir, ignore_errors=True)
+        writer = tensorboard.SummaryWriter(log_dir=log_dir)
     return {
-        "optimizer": optimizer, 
+        "optimizer": optimizer,
         "scheduler": scheduler,
         "criterion": criterion,
         "scaler": scaler,
@@ -41,8 +46,9 @@ def train_epoch(model, train_loader, train_tools, epoch):
     # switch to train mode
     model.train()
     n_epoch = len(train_loader)
+    lr = optimizer.state_dict()['param_groups'][0]['lr']
 
-    for i, (image, target) in enumerate(train_loader):
+    for i, (image, target) in enumerate(tqdm.tqdm(train_loader)):
 
         image = image.cuda()
         target = target.cuda()
@@ -53,9 +59,13 @@ def train_epoch(model, train_loader, train_tools, epoch):
         train_loss = loss.mean()
         optimizer.zero_grad()
 
-        scaler.scale(train_loss).backward()
-        scaler.step(optimizer)
-        scaler.update()
+        if scaler:
+            scaler.scale(train_loss).backward()
+            scaler.step(optimizer)
+            scaler.update()
+        else:
+            train_loss.backward()
+            optimizer.step()
 
         # measure accuracy and record loss
         with torch.no_grad():
@@ -69,11 +79,18 @@ def train_epoch(model, train_loader, train_tools, epoch):
             top1.update(classwise_acc.cpu().numpy(), batch_size)
 
             if writer is not None:
-                writer.add_scalars('Training/iter/acc', top1.val, epoch * (n_epoch) + i)
-                writer.add_scalars('Training/iter/loss', losses.val, epoch * (n_epoch) + i)
+                utils.plot_tensorboard(
+                    writer, 'Training_iter/acc', top1.val, epoch * (n_epoch) + i)
+                utils.plot_tensorboard(
+                    writer, 'Training_iter/loss', losses.val, epoch * (n_epoch) + i)
 
-    writer.add_scalars('Training/epoch/acc', top1.avg, epoch)
-    writer.add_scalars('Training/epoch/loss', losses.avg, epoch)
+    if writer is not None:
+        utils.plot_tensorboard(
+            writer, 'Training_epoch/acc', top1.avg, epoch)
+        utils.plot_tensorboard(
+            writer, 'Training_epoch/loss', losses.avg, epoch)
+        utils.plot_tensorboard(
+            writer, 'Training_epoch/lr', lr, epoch)
 
     return top1.avg, losses.avg
 
@@ -112,10 +129,12 @@ def train_with_rewind(model, loaders, train_tools, args):
 
     scheduler = train_tools['scheduler']
     writer = train_tools['writer']
+    criterion = train_tools["criterion"]
 
     rewind_state_dict = None
-    for epoch in tqdm.tqdm(range(args.epochs)):
-        if epoch == args.rewind_epoch:
+    for epoch in range(args.epochs):
+        print(f"Epoch: {epoch}")
+        if hasattr(args, "rewind_epoch") and epoch == args.rewind_epoch:
             rewind_path = os.path.join(
                 args.save_dir, 'epoch_{}_rewind_weight.pt'.format(epoch+1))
             torch.save(model.state_dict(), rewind_path)
@@ -123,12 +142,17 @@ def train_with_rewind(model, loaders, train_tools, args):
                 rewind_state_dict = copy.deepcopy(model.state_dict())
 
         start_time = time.time()
-        print(train_tools.state_dict()['param_groups'][0]['lr'])
-        train_epoch(model, train_loader, train_tools, epoch)
-        acc, loss = validate(test_loader, model, train_tools["criterion"])
+        train_acc, train_loss = train_epoch(
+            model, train_loader, train_tools, epoch)
+        print("Train: Accuracy: {} Loss: {}".format(train_acc, train_loss))
+        test_acc, test_loss = validate(test_loader, model, criterion)
+        print("Test: Accuracy: {} Loss: {}".format(test_acc, test_loss))
 
-        writer.add_scalars('Training/epoch/acc', acc, epoch)
-        writer.add_scalars('Training/epoch/loss', loss, epoch)
+        if writer is not None:
+            utils.plot_tensorboard(
+                writer, 'Testing/acc', test_acc, epoch)
+            utils.plot_tensorboard(
+                writer, 'Testing/loss', test_loss, epoch)
 
         scheduler.step()
         print("one epoch duration:{}".format(time.time()-start_time))
