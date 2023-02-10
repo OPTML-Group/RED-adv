@@ -15,6 +15,7 @@ label_name = "attr_labels.pt"
 def main():
     args = arg_parser.parse_args_model_parsing()
     dir = args.dataset_dir
+    utils.set_seed(args.seed)
 
     if args.input_type == "x_adv":
         suffix = adv_name
@@ -40,17 +41,17 @@ def main():
 
     loaders = {
         "train": torch.utils.data.DataLoader(
-        train_set, batch_size=args.batch_size, shuffle=True),
+            train_set, batch_size=args.batch_size, shuffle=True),
         "test": torch.utils.data.DataLoader(
-        test_set, batch_size=args.batch_size, shuffle=False)
+            test_set, batch_size=args.batch_size, shuffle=False)
     }
 
     model = models.ConvNet(num_channels=n_channels, num_classes=3,
                            num_outputs=n_outputs).cuda()
 
-    train_tools = trainer.get_training_tools(model, args)
-    
-    trainer.train_with_rewind(model, loaders, train_tools, args)
+    train_params = trainer.get_training_params(model, "model_parser", args)
+
+    trainer.train_with_rewind(train_params, loaders, args)
 
 
 if __name__ == "__main__":
