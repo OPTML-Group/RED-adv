@@ -1,5 +1,19 @@
 from utils import run_commands
 
+attacks = [
+    {'attack':'pgd', "eps":4/255, "alpha":0.5/255},
+    {'attack':'pgd', "eps":8/255, "alpha":1/255},
+    {'attack':'pgd', "eps":12/255, "alpha":2/255},
+    {'attack':'pgd', "eps":16/255, "alpha":2/255},
+    {'attack':'fgsm', "eps":8/255},
+    {'attack':'fgsm', "eps":16/255},
+    {'attack':'pgd_l2', "eps":0.5, "alpha":0.1},
+    {'attack':'pgd_l2', "eps":1, "alpha":0.2},
+    {'attack':'auto', "eps":8/255, "norm":'Linf'},
+    {'attack':'cw'},
+    {'attack':'square', "eps":8/255}
+]
+
 
 def gen_commands():
     epss = [0.3, 0.6]

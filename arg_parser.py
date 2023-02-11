@@ -55,8 +55,13 @@ def model_args(parser):
 
 
 def attack_args(parser):
+    parser.add_argument('--attack', type=str, 
+                        choices=["pgd", "pgd_l2", "fgsm", "cw", "square", "auto"])
     parser.add_argument('--steps', type=int, default=10)
     parser.add_argument('--eps', type=float, default=8/255)
+    parser.add_argument('--alpha', type=float, default=1/255)
+    parser.add_argument('--norm', type=str, default="Linf")
+    parser.add_argument('--n-queries', type=int, default=5000)
 
 
 def parse_args_model_parsing():
