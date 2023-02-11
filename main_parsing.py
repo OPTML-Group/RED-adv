@@ -49,7 +49,7 @@ def main():
     model = models.ConvNet(num_channels=n_channels, num_classes=3,
                            num_outputs=n_outputs).cuda()
 
-    train_params = trainer.get_training_params(model, "model_parser", args)
+    train_params = trainer.get_training_params(model, "model_parser", args, use_scaler=False)
 
     trainer.train_with_rewind(train_params, loaders, args)
 

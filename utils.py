@@ -95,8 +95,8 @@ class AverageMeter(object):
         self.avg = self.sum / self.count
 
 
-# Feb. 5, 2023 version
-def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5):
+# Feb. 11, 2023 version
+def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5, ext_command=""):
     command_dir = os.path.join("commands", suffix)
     if len(commands) == 0:
         return
@@ -118,11 +118,12 @@ def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5):
         if len(i_commands) == 0:
             continue
         prefix = "CUDA_VISIBLE_DEVICES={} ".format(gpu)
+        suffix = suffix.format(i=i)
 
         sh_path = os.path.join(command_dir, "run{}.sh".format(i))
         fout = open(sh_path, 'w')
         for com in i_commands:
-            print(prefix + com, file=fout)
+            print(prefix + com + suffix, file=fout)
         fout.close()
         if call:
             os.system("bash {}&".format(sh_path))
