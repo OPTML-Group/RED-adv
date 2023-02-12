@@ -217,4 +217,5 @@ def train_with_rewind(train_params, loaders, args):
     print("Final train: Accuracy: {} Loss: {}".format(train_acc, train_loss))
     test_acc, test_loss = validate(model, test_loader, criterion)
     print("Final test: Accuracy: {} Loss: {}".format(test_acc, test_loss))
+
     return rewind_path

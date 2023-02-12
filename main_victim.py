@@ -3,6 +3,7 @@ import utils
 import datasets
 import models
 import pruner
+import attacks
 
 def main():
     args = arg_parser.parse_args_victim_training()
@@ -17,6 +18,10 @@ def main():
         prefix += "struct_"
 
     pruner.omp(model, loader, args, prefix=prefix)
+
+    if args.attack is not None:
+        atk = attacks.get_attack_normalized(model, args.attack, args)
+        attacks.generate_attack_images(model, loader, atk, args.attack_save_dir)
 
 if __name__ == "__main__":
     main()

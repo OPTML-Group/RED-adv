@@ -118,12 +118,12 @@ def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5, ex
         if len(i_commands) == 0:
             continue
         prefix = "CUDA_VISIBLE_DEVICES={} ".format(gpu)
-        suffix = suffix.format(i=i)
+        ext_command_i = ext_command.format(i=i)
 
         sh_path = os.path.join(command_dir, "run{}.sh".format(i))
         fout = open(sh_path, 'w')
         for com in i_commands:
-            print(prefix + com + suffix, file=fout)
+            print(prefix + com + ext_command_i, file=fout)
         fout.close()
         if call:
             os.system("bash {}&".format(sh_path))
