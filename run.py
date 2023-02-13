@@ -1,17 +1,35 @@
 from utils import run_commands
 
+# attacks = [
+#     {'attack': 'pgd', "eps": 4, "alpha": 0.5},
+#     {'attack': 'pgd', "eps": 8, "alpha": 1},
+#     {'attack': 'pgd', "eps": 12, "alpha": 2},
+#     {'attack': 'pgd', "eps": 16, "alpha": 2},
+#     {'attack': 'fgsm', "eps": 8},
+#     {'attack': 'fgsm', "eps": 16},
+#     {'attack': 'pgdl2', "eps": 0.5, "alpha": 0.1},
+#     {'attack': 'pgdl2', "eps": 1, "alpha": 0.2},
+#     {'attack': 'autoattack', "eps": 8, "norm": 'Linf'},
+#     {'attack': 'cw'},
+#     {'attack': 'square', "eps": 8}
+# ]
 attacks = [
-    {'attack': 'pgd', "eps": 4, "alpha": 0.5},
-    {'attack': 'pgd', "eps": 8, "alpha": 1},
-    {'attack': 'pgd', "eps": 12, "alpha": 2},
-    {'attack': 'pgd', "eps": 16, "alpha": 2},
-    {'attack': 'fgsm', "eps": 8},
-    {'attack': 'fgsm', "eps": 16},
-    {'attack': 'pgdl2', "eps": 0.5, "alpha": 0.1},
-    {'attack': 'pgdl2', "eps": 1, "alpha": 0.2},
+    {'attack': 'square', "eps": 4, "norm": 'Linf'},
+    {'attack': 'square', "eps": 8, "norm": 'Linf'},
+    {'attack': 'square', "eps": 12, "norm": 'Linf'},
+    {'attack': 'square', "eps": 16, "norm": 'Linf'},
+    {'attack': 'square', "eps": 0.25, "norm": 'L2'},
+    {'attack': 'square', "eps": 0.5, "norm": 'L2'},
+    {'attack': 'square', "eps": 0.75, "norm": 'L2'},
+    {'attack': 'square', "eps": 1.0, "norm": 'L2'},
+    {'attack': 'autoattack', "eps": 4, "norm": 'Linf'},
     {'attack': 'autoattack', "eps": 8, "norm": 'Linf'},
-    {'attack': 'cw'},
-    {'attack': 'square', "eps": 8}
+    {'attack': 'autoattack', "eps": 12, "norm": 'Linf'},
+    {'attack': 'autoattack', "eps": 16, "norm": 'Linf'},
+    {'attack': 'autoattack', "eps": 0.25, "norm": 'L2'},
+    {'attack': 'autoattack', "eps": 0.5, "norm": 'L2'},
+    {'attack': 'autoattack', "eps": 0.75, "norm": 'L2'},
+    {'attack': 'autoattack', "eps": 1.0, "norm": 'L2'},
 ]
 
 
@@ -63,5 +81,6 @@ if __name__ == "__main__":
     #              dir="commands", shuffle=False, delay=0.5)
 
     commands = gen_commands_victim()
-    run_commands([4, 5, 6, 7] * 5, commands, call=True, ext_command=" --dataset-dir /tmp/cifar{i}",
+    print(len(commands))
+    run_commands(list(range(8)) * 5, commands, call=True, ext_command=" --dataset-dir /tmp/cifar{i}",
                  suffix="commands", shuffle=False, delay=1)

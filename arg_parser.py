@@ -61,7 +61,8 @@ def attack_args(parser):
     parser.add_argument('--steps', type=int, default=10)
     parser.add_argument('--eps', type=float, default=8/255)
     parser.add_argument('--alpha', type=float, default=1/255)
-    parser.add_argument('--norm', type=str, default="Linf")
+    parser.add_argument('--norm', type=str, default="Linf",
+                        choices=["Linf", "L2"])
     parser.add_argument('--n-queries', type=int, default=5000)
 
 

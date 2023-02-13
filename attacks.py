@@ -45,6 +45,10 @@ def generate_attack_images(model, loader, atk, save_dir=None):
         torch.save(deltas, os.path.join(save_dir, "delta.pt"))
         torch.save(x_advs, os.path.join(save_dir, "attr_labels.pt"))
     
+        with open('attack_acc.log', 'w') as fout:
+            print("n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout)
+            print("n_succ: {}".format(n_success / n_datas * 100), file=fout)
+    
     print("n_corr_succ: {}".format(n_correct_success / n_datas * 100))
     print("n_succ: {}".format(n_success / n_datas * 100))
     
@@ -59,12 +63,16 @@ def get_attack(model, name, args):
     elif name == "pgdl2":
         return atk.PGDL2(model, eps=args.eps, alpha=args.alpha, steps=args.steps)
     elif name == "autoattack":
+        if args.norm == "Linf":
+            args.eps /= 255
         return atk.AutoAttack(
-            model, norm=args.norm, eps=args.eps/255)  # AutoAttack
+            model, norm=args.norm, eps=args.eps)  # AutoAttack
     elif name == "fgsm":
         return atk.FGSM(model, eps=args.eps/255)  # FGSM (l_inf)
     elif name == "square":
-        return atk.Square(model, norm=args.norm, eps=args.eps/255, n_queries=args.n_queries)
+        if args.norm == "Linf":
+            args.eps /= 255
+        return atk.Square(model, norm=args.norm, eps=args.eps, n_queries=args.n_queries)
     else:
         raise NotImplementedError(
             "Attack method {} is not implemented!".format(name))
