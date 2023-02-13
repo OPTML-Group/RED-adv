@@ -30,6 +30,10 @@ attacks = [
     {'attack': 'autoattack', "eps": 0.5, "norm": 'L2'},
     {'attack': 'autoattack', "eps": 0.75, "norm": 'L2'},
     {'attack': 'autoattack', "eps": 1.0, "norm": 'L2'},
+    {'attack': 'cw', "cw-c": 1, "cw-kappa": 0},
+    {'attack': 'cw', "cw-c": 1, "cw-kappa": 0.1},
+    {'attack': 'cw', "cw-c": 10, "cw-kappa": 0},
+    {'attack': 'cw', "cw-c": 10, "cw-kappa": 0.1},
 ]
 
 

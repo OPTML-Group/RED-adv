@@ -7,6 +7,12 @@ import torchattack.torchattacks as atk
 
 
 def generate_attack_images(model, loader, atk, save_dir=None):
+    path_x_adv = os.path.join(save_dir, "x_adv.pt")
+    path_delta = os.path.join(save_dir, "delta.pt")
+    path_label = os.path.join(save_dir, "attr_labels.pt")
+    # if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_label):
+    #     return torch.load(x_advs, path_x_adv), torch.load(deltas, path_delta), torch.load(x_advs, path_label)
+
     x_advs, deltas, targets = [], [], []
 
     n_datas, n_correct_success, n_success = 0, 0, 0
@@ -41,9 +47,9 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     os.makedirs(save_dir, exist_ok=True)
 
     if save_dir is not None:
-        torch.save(x_advs, os.path.join(save_dir, "x_adv.pt"))
-        torch.save(deltas, os.path.join(save_dir, "delta.pt"))
-        torch.save(x_advs, os.path.join(save_dir, "attr_labels.pt"))
+        torch.save(x_advs, path_x_adv)
+        torch.save(deltas, path_delta)
+        torch.save(targets, path_label)
     
         with open('attack_acc.log', 'w') as fout:
             print("n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout)
@@ -51,6 +57,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     
     print("n_corr_succ: {}".format(n_correct_success / n_datas * 100))
     print("n_succ: {}".format(n_success / n_datas * 100))
+    return x_advs , deltas, targets
     
 
 def get_attack(model, name, args):
@@ -59,7 +66,7 @@ def get_attack(model, name, args):
             args.eps, args.alpha, args.steps))
         return atk.PGD(model, eps=args.eps/255, alpha=args.alpha/255, steps=args.steps)
     elif name == "cw":
-        return atk.CW(model)
+        return atk.CW(model, c=args.cw_c, kappa=args.cw_kappa)
     elif name == "pgdl2":
         return atk.PGDL2(model, eps=args.eps, alpha=args.alpha, steps=args.steps)
     elif name == "autoattack":
