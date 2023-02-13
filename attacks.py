@@ -9,9 +9,10 @@ import torchattack.torchattacks as atk
 def generate_attack_images(model, loader, atk, save_dir=None):
     path_x_adv = os.path.join(save_dir, "x_adv.pt")
     path_delta = os.path.join(save_dir, "delta.pt")
-    path_label = os.path.join(save_dir, "attr_labels.pt")
-    # if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_label):
-    #     return torch.load(x_advs, path_x_adv), torch.load(deltas, path_delta), torch.load(x_advs, path_label)
+    path_target = os.path.join(save_dir, "targets.pt")
+    path_acc = os.path.join(save_dir, 'attack_acc.log')
+    if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_target) and os.path.exists(path_acc):
+        return torch.load(path_x_adv), torch.load(path_delta), torch.load(path_target)
 
     x_advs, deltas, targets = [], [], []
 
@@ -49,9 +50,9 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     if save_dir is not None:
         torch.save(x_advs, path_x_adv)
         torch.save(deltas, path_delta)
-        torch.save(targets, path_label)
+        torch.save(targets, path_target)
     
-        with open('attack_acc.log', 'w') as fout:
+        with open(path_acc, 'w') as fout:
             print("n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout)
             print("n_succ: {}".format(n_success / n_datas * 100), file=fout)
     

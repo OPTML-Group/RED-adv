@@ -4,6 +4,7 @@ import datasets
 import models
 import pruner
 import attacks
+import os
 
 
 def main():
@@ -24,8 +25,10 @@ def main():
 
     if args.attack is not None:
         atk = attacks.get_attack_normalized(model, args.attack, args)
+        prefix = prefix[:-1]
+        attack_dir = os.path.join(args.attack_save_dir, prefix)
         attacks.generate_attack_images(
-            model, loader, atk, args.attack_save_dir)
+            model, loader, atk, attack_dir)
 
 
 if __name__ == "__main__":

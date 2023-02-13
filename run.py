@@ -1,27 +1,30 @@
 from utils import run_commands
 
-# attacks = [
+attacks = []
+# attacks += [
 #     {'attack': 'pgd', "eps": 4, "alpha": 0.5},
 #     {'attack': 'pgd', "eps": 8, "alpha": 1},
 #     {'attack': 'pgd', "eps": 12, "alpha": 2},
 #     {'attack': 'pgd', "eps": 16, "alpha": 2},
+#     {'attack': 'fgsm', "eps": 4},
 #     {'attack': 'fgsm', "eps": 8},
 #     {'attack': 'fgsm', "eps": 16},
+#     {'attack': 'fgsm', "eps": 32},
+#     {'attack': 'pgdl2', "eps": 0.125, "alpha": 0.025},
+#     {'attack': 'pgdl2', "eps": 0.25, "alpha": 0.05},
 #     {'attack': 'pgdl2', "eps": 0.5, "alpha": 0.1},
 #     {'attack': 'pgdl2', "eps": 1, "alpha": 0.2},
-#     {'attack': 'autoattack', "eps": 8, "norm": 'Linf'},
-#     {'attack': 'cw'},
-#     {'attack': 'square', "eps": 8}
+#     {'attack': 'pgdl2', "eps": 1.5, "alpha": 0.3},
 # ]
-attacks = [
-    {'attack': 'square', "eps": 4, "norm": 'Linf'},
-    {'attack': 'square', "eps": 8, "norm": 'Linf'},
-    {'attack': 'square', "eps": 12, "norm": 'Linf'},
-    {'attack': 'square', "eps": 16, "norm": 'Linf'},
-    {'attack': 'square', "eps": 0.25, "norm": 'L2'},
-    {'attack': 'square', "eps": 0.5, "norm": 'L2'},
-    {'attack': 'square', "eps": 0.75, "norm": 'L2'},
-    {'attack': 'square', "eps": 1.0, "norm": 'L2'},
+attacks += [
+    # {'attack': 'square', "eps": 4, "norm": 'Linf'},
+    # {'attack': 'square', "eps": 8, "norm": 'Linf'},
+    # {'attack': 'square', "eps": 12, "norm": 'Linf'},
+    # {'attack': 'square', "eps": 16, "norm": 'Linf'},
+    # {'attack': 'square', "eps": 0.25, "norm": 'L2'},
+    # {'attack': 'square', "eps": 0.5, "norm": 'L2'},
+    # {'attack': 'square', "eps": 0.75, "norm": 'L2'},
+    # {'attack': 'square', "eps": 1.0, "norm": 'L2'},
     {'attack': 'autoattack', "eps": 4, "norm": 'Linf'},
     {'attack': 'autoattack', "eps": 8, "norm": 'Linf'},
     {'attack': 'autoattack', "eps": 12, "norm": 'Linf'},
@@ -30,10 +33,10 @@ attacks = [
     {'attack': 'autoattack', "eps": 0.5, "norm": 'L2'},
     {'attack': 'autoattack', "eps": 0.75, "norm": 'L2'},
     {'attack': 'autoattack', "eps": 1.0, "norm": 'L2'},
-    {'attack': 'cw', "cw-c": 1, "cw-kappa": 0},
-    {'attack': 'cw', "cw-c": 1, "cw-kappa": 0.1},
-    {'attack': 'cw', "cw-c": 10, "cw-kappa": 0},
-    {'attack': 'cw', "cw-c": 10, "cw-kappa": 0.1},
+    # {'attack': 'cw', "cw-c": 1, "cw-kappa": 0},
+    # {'attack': 'cw', "cw-c": 1, "cw-kappa": 0.1},
+    # {'attack': 'cw', "cw-c": 10, "cw-kappa": 0},
+    # {'attack': 'cw', "cw-c": 10, "cw-kappa": 0.1},
 ]
 
 
@@ -57,8 +60,8 @@ def gen_commands_victim():
     kernels = [3, 5, 7]
     acts = ["relu", "tanh", "elu"]
     ratios = [0.0, 0.375, 0.625]
-    # struct = [True, False]
-    struct = [True]
+    struct = [True, False]
+    # struct = [True]
     for atk in attacks:
         for k in kernels:
             for a in acts:
@@ -86,5 +89,5 @@ if __name__ == "__main__":
 
     commands = gen_commands_victim()
     print(len(commands))
-    run_commands(list(range(8)) * 5, commands, call=True, ext_command=" --dataset-dir /tmp/cifar{i}",
+    run_commands(list(range(4)) * 6 + list(range(4, 8)) * 3, commands, call=True, ext_command=" --dataset-dir /tmp/cifar{i}",
                  suffix="commands", shuffle=False, delay=1)

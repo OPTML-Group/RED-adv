@@ -65,7 +65,7 @@ def attack_args(parser):
                         choices=["Linf", "L2"])
     parser.add_argument('--n-queries', type=int, default=5000)
     parser.add_argument('--cw-c', type=int, default=1)
-    parser.add_argument('--cw-kappa', type=int, default=0)
+    parser.add_argument('--cw-kappa', type=float, default=0)
     
 
 
