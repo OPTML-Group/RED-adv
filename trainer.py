@@ -23,7 +23,8 @@ def load_checkpoint(train_params, path, model_only=False):
                 train_params[key] = item
             elif key == "model":
                 current_mask = pruner.extract_mask(item)
-                pruner.prune_model_custom(train_params[key], current_mask)
+                if len(current_mask) > 0:
+                    pruner.prune_model_custom(train_params[key], current_mask)
                 train_params[key].load_state_dict(item, strict=False)
             else:
                 train_params[key].load_state_dict(item)
