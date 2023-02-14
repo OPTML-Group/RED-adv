@@ -35,9 +35,10 @@ def generate_attack_images(model, loader, atk, save_dir=None):
         n_success += sum(idx_adv).item()
 
         adv_delta = (image_adv-image)[idx]
+        x_adv = image_adv[idx]
         target = target[idx]
 
-        x_advs.append(image_adv.cpu())
+        x_advs.append(x_adv.cpu())
         deltas.append(adv_delta.cpu())
         targets.append(target.cpu())
 

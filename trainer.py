@@ -9,6 +9,8 @@ import torch
 from torch.cuda.amp import autocast, GradScaler
 from torch.utils import tensorboard
 
+import pruner
+
 
 def load_checkpoint(train_params, path, model_only=False):
     print("Loading checkpoint from {}".format(path))
@@ -19,6 +21,10 @@ def load_checkpoint(train_params, path, model_only=False):
         for key, item in load_dict.items():
             if key == "start_epoch":
                 train_params[key] = item
+            elif key == "model":
+                current_mask = pruner.extract_mask(item)
+                pruner.prune_model_custom(train_params[key], current_mask)
+                train_params[key].load_state_dict(item, strict=False)
             else:
                 train_params[key].load_state_dict(item)
 
