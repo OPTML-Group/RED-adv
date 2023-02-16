@@ -114,11 +114,11 @@ def gen_commands_eval_old():
 def gen_commands_victim(robust=True):
     commands = []
     # struct = [True]
-    for atk in attacks:
+    for idx, atk in enumerate(attacks):
         for k in kernels:
             for a in acts:
-                for r in ratios:
-                    for s in struct:
+                for s in struct:
+                    for r in ratios:
                         if r == 0.0 and s:
                             continue
                         command = f"python main_victim.py --kernel-size {k} --act-func {a} --pruning-ratio {r} --tensorboard"
@@ -142,8 +142,11 @@ def gen_commands_victim(robust=True):
                         if robust:
                             model_name += '_robust'
 
-                        if not os.path.exists(os.path.join(atk_path, model_name)):
-                            commands.append(command)
+                        if not os.path.exists(os.path.join(atk_path, model_name, 'ori_pred.pt')):
+                            # commands.append(command)
+                            path = f"/localscratch2/ljcc/results/{model_name}_omp_2/checkpoint_75.pt"
+                            if idx == 0 or idx > 0 and os.path.exists(path):
+                                commands.append(command)
     return commands
 
 
@@ -155,5 +158,5 @@ if __name__ == "__main__":
 
     commands = gen_commands_victim()
     print(len(commands))
-    run_commands(list(range(6)) * 3, commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
+    run_commands(list(range(8)) * 4, commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
                  suffix="commands", shuffle=False, delay=1)

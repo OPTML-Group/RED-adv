@@ -1,5 +1,6 @@
 import tqdm
 import os
+import shutil
 
 import torch
 
@@ -7,14 +8,24 @@ import torchattack.torchattacks as atk
 
 
 def generate_attack_images(model, loader, atk, save_dir=None):
-    path_x_adv = os.path.join(save_dir, "x_adv.pt")
-    path_delta = os.path.join(save_dir, "delta.pt")
+    # path_x_adv = os.path.join(save_dir, "x_adv.pt")
+    # path_delta = os.path.join(save_dir, "delta.pt")
+    path_delta_all = os.path.join(save_dir, "delta_all.pt")
+    path_adv_all = os.path.join(save_dir, "adv_all.pt")
+    
+    path_ori_pred = os.path.join(save_dir, "ori_pred.pt")
+    path_adv_pred = os.path.join(save_dir, "adv_pred.pt")
     path_target = os.path.join(save_dir, "targets.pt")
-    path_acc = os.path.join(save_dir, 'attack_acc.log')
-    if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_target) and os.path.exists(path_acc):
-        return torch.load(path_x_adv), torch.load(path_delta), torch.load(path_target)
 
-    x_advs, deltas, targets = [], [], []
+    path_acc = os.path.join(save_dir, 'attack_acc.log')
+    # if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_target) and os.path.exists(path_acc):
+    #     return torch.load(path_x_adv), torch.load(path_delta), torch.load(path_target)
+    if os.path.exists(path_target) and os.path.exists(path_delta_all) and os.path.exists(path_adv_all) and os.path.exists(path_adv_pred) and os.path.exists(path_ori_pred) and os.path.exists(path_acc):
+        return 
+    shutil.rmtree(save_dir, ignore_errors=True)
+
+    # x_advs, deltas,  = [], []
+    targets, adv, adv_outs, delta_all, ori_pred = [], [], [], [], []
 
     n_datas, n_correct_success, n_success = 0, 0, 0
 
@@ -23,35 +34,56 @@ def generate_attack_images(model, loader, atk, save_dir=None):
         image = image.float()
         target = target.long()
 
-        image_adv = atk(image, target)
-        ori_out = model(image)
-        adv_out = model(image_adv)  # Test-time augmentation
+        image_adv = atk(image, target).detach()
+        with torch.no_grad():
+            ori_out = model(image).detach()
+            adv_out = model(image_adv).detach()  # Test-time augmentation
 
-        idx = ori_out.argmax(1).eq(target) * adv_out.argmax(1).ne(target)
-        idx_adv = adv_out.argmax(1).ne(target)
+            pred = adv_out.argmax(1)
 
-        n_datas += len(idx)
-        n_correct_success += sum(idx).item()
-        n_success += sum(idx_adv).item()
+            idx = ori_out.argmax(1).eq(target) * pred.ne(target)
+            idx_adv = adv_out.argmax(1).ne(target)
 
-        adv_delta = (image_adv-image)[idx]
-        x_adv = image_adv[idx]
-        target = target[idx]
+            n_datas += len(idx)
+            n_correct_success += sum(idx).item()
+            n_success += sum(idx_adv).item()
 
-        x_advs.append(x_adv.cpu())
-        deltas.append(adv_delta.cpu())
-        targets.append(target.cpu())
+            delta = image_adv-image
 
-    x_advs = torch.cat(x_advs, axis=0)
-    deltas = torch.cat(deltas, axis=0)
+            # adv_delta = delta[idx]
+            # x_adv = image_adv[idx]
+
+            # x_advs.append(x_adv.cpu())
+            # deltas.append(adv_delta.cpu())
+
+            adv.append(image_adv.detach().cpu())
+            delta_all.append(delta.detach().cpu())
+
+            ori_pred.append(ori_out.cpu())
+            adv_outs.append(pred.cpu())
+            targets.append(target.detach().cpu())
+
+    # x_advs = torch.cat(x_advs, axis=0)
+    # deltas = torch.cat(deltas, axis=0)
+
+    adv = torch.cat(adv, axis=0)
+    delta_all = torch.cat(delta_all, axis=0)
+
     targets = torch.cat(targets, axis=0)
+    adv_outs = torch.cat(adv_outs, axis=0)
+    ori_pred = torch.cat(ori_pred, axis=0)
 
     os.makedirs(save_dir, exist_ok=True)
 
     if save_dir is not None:
-        torch.save(x_advs, path_x_adv)
-        torch.save(deltas, path_delta)
+        # torch.save(x_advs, path_x_adv)
+        # torch.save(deltas, path_delta)
+        torch.save(adv, path_adv_all)
+        torch.save(delta_all, path_delta_all)
+
         torch.save(targets, path_target)
+        torch.save(adv_outs, path_adv_pred)
+        torch.save(ori_pred, path_ori_pred)
     
         with open(path_acc, 'w') as fout:
             print("n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout)
@@ -59,7 +91,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     
     print("n_corr_succ: {}".format(n_correct_success / n_datas * 100))
     print("n_succ: {}".format(n_success / n_datas * 100))
-    return x_advs , deltas, targets
+    # return x_advs, deltas, targets
     
 
 def get_attack(model, name, args):
