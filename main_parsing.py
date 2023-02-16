@@ -53,15 +53,18 @@ def load_data(args):
     input_path = os.path.join(dir, suffix)
 
     if not os.path.exists(input_path):
-        return grep_datas(dir, suffix)
+        data, label = grep_datas(dir, suffix)
+    else:
+        data = torch.load(input_path)
+        label = torch.load(os.path.join(dir, label_name))
 
     with torch.no_grad():
-        data = torch.load(input_path).float()
+        data = data.float()
+        label = label.long().detach()
         mean = torch.mean(data, dim=[0, 2, 3])
         std = torch.std(data, dim=[0, 2, 3])
         print(mean, std)
         data = ((data - mean[:, None, None]) / std[:, None, None]).detach()
-        label = torch.load(os.path.join(dir, label_name)).long().detach()
     return data, label
 
 
@@ -70,6 +73,7 @@ def main():
     utils.set_seed(args.seed)
 
     data, label = load_data(args)
+    exit(0)
 
     n_channels = data.shape[1]
     n_outputs = label.shape[1]
@@ -85,11 +89,11 @@ def main():
             test_set, batch_size=args.batch_size, shuffle=False)
     }
 
-    model = models.ConvNet(num_channels=n_channels, num_classes=3,
+    model = models.ConvNet(num_channels=n_channels, num_classes=5,
                            num_outputs=n_outputs).cuda()
 
     train_params = trainer.get_training_params(
-        model, "model_parser", args, use_scaler=False)
+        model, args.input_type, args, use_scaler=False)
 
     trainer.train_with_rewind(train_params, loaders, args)
 

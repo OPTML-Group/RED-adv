@@ -52,16 +52,16 @@ def get_training_params(model, name, args, use_scaler=True):
         scaler = GradScaler()
     criterion = torch.nn.CrossEntropyLoss(reduction="none")
     writer = None
-    if args.tensorboard:
-        log_dir = os.path.join(args.save_dir, name, "tensorboard")
-        if args.rerun:
-            shutil.rmtree(log_dir, ignore_errors=True)
-        writer = tensorboard.SummaryWriter(log_dir=log_dir)
 
     save_dir = os.path.join(args.save_dir, name)
     if args.rerun:
         shutil.rmtree(save_dir, ignore_errors=True)
     os.makedirs(save_dir, exist_ok=True)
+
+    if args.tensorboard:
+        log_dir = os.path.join(save_dir, "tensorboard")
+        writer = tensorboard.SummaryWriter(log_dir=log_dir)
+
 
     train_params = {
         "optimizer": optimizer,
