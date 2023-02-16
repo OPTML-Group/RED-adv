@@ -31,6 +31,8 @@ def training_args(parser):
     parser.add_argument('--save-freq', type=int,
                         default=5, help='num of epochs for saving checkpoint')
     parser.add_argument('--num_classes', type=int, default=10)
+    parser.add_argument('--robust-train', action="store_true",
+                        help="Robustive training")
     # parser.add_argument('--decreasing_lr', default='91,136',
     #                     help='decreasing strategy')
 

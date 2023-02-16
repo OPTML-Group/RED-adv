@@ -10,6 +10,7 @@ from torch.cuda.amp import autocast, GradScaler
 from torch.utils import tensorboard
 
 import pruner
+import attacks
 
 
 def load_checkpoint(train_params, path, model_only=False):
@@ -62,6 +63,14 @@ def get_training_params(model, name, args, use_scaler=True):
         log_dir = os.path.join(save_dir, "tensorboard")
         writer = tensorboard.SummaryWriter(log_dir=log_dir)
 
+    attack = None
+    if args.robust_train:
+        attack = attacks.atk.PGD(model, eps=8/255, alpha=1/255, steps=10)
+
+        CIFAR_MEAN_1 = [125.307/255, 122.961/255, 113.8575/255]
+        CIFAR_STD_1 = [51.5865/255, 50.847/255, 51.255/255]
+
+        attack.set_normalization_used(mean=CIFAR_MEAN_1, std=CIFAR_STD_1)
 
     train_params = {
         "optimizer": optimizer,
@@ -71,6 +80,7 @@ def get_training_params(model, name, args, use_scaler=True):
         "writer": writer,
         "model": model,
         "name": name,
+        "attack": attack,
         "start_epoch": 0,
     }
 
@@ -95,6 +105,7 @@ def train_epoch(train_params, train_loader, epoch):
     writer = train_params['writer']
     model = train_params['model']
     name = train_params['name']
+    atk = train_params['attack']
 
     # switch to train mode
     model.train()
@@ -107,6 +118,9 @@ def train_epoch(train_params, train_loader, epoch):
 
         # compute output
         with autocast():
+            if atk is not None:
+                image = atk(image, target)
+                model.train()
             output = model(image)
             loss = criterion(output, target)
             train_loss = loss.mean()
@@ -149,7 +163,7 @@ def train_epoch(train_params, train_loader, epoch):
     return top1.avg, losses.avg
 
 
-def validate(model, val_loader, criterion):
+def validate(model, val_loader, criterion, atk=None):
     losses = utils.AverageMeter()
     top1 = utils.AverageMeter()
 
@@ -160,9 +174,11 @@ def validate(model, val_loader, criterion):
         image = image.cuda()
         target = target.cuda()
 
-        # compute output
-        with torch.no_grad():
-            with autocast():
+        with autocast():
+            if atk is not None:
+                image = atk(image, target)
+            # compute output
+            with torch.no_grad():
                 output = model(image)
                 loss = criterion(output, target)
 
@@ -188,6 +204,7 @@ def train_with_rewind(train_params, loaders, args):
     model = train_params["model"]
     name = train_params['name']
     start_epoch = train_params["start_epoch"]
+    atk = train_params['attack']
 
     save_dir = os.path.join(args.save_dir, name)
 
@@ -212,6 +229,16 @@ def train_with_rewind(train_params, loaders, args):
                 writer, f'{name}_test/acc', test_acc, epoch)
             utils.plot_tensorboard(
                 writer, f'{name}_test/loss', test_loss, epoch)
+            
+        if atk is not None:
+            attack_acc, attack_loss = validate(model, test_loader, criterion, atk=atk)
+            print("Attack: Accuracy: {} Loss: {}".format(attack_acc, attack_loss))
+
+            if writer is not None:
+                utils.plot_tensorboard(
+                    writer, f'{name}_test/attack_acc', attack_acc, epoch)
+                utils.plot_tensorboard(
+                    writer, f'{name}_test/attack_loss', attack_loss, epoch)
 
         scheduler.step()
         print("one epoch duration:{}".format(time.time()-start_time))

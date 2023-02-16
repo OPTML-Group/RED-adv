@@ -20,6 +20,8 @@ def main():
         args.seed, args.kernel_size, args.act_func, args.pruning_ratio)
     if args.structured_pruning:
         prefix += "struct_"
+    if args.robust_train:
+        prefix += "robust_"
 
     pruner.omp(model, loader, args, prefix=prefix)
 

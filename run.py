@@ -111,7 +111,7 @@ def gen_commands_eval_old():
     return commands
 
 
-def gen_commands_victim():
+def gen_commands_victim(robust=True):
     commands = []
     # struct = [True]
     for atk in attacks:
@@ -121,10 +121,12 @@ def gen_commands_victim():
                     for s in struct:
                         if r == 0.0 and s:
                             continue
-                        command = f"python main_victim.py --kernel-size {k} --act-func {a} --pruning-ratio {r}"
+                        command = f"python main_victim.py --kernel-size {k} --act-func {a} --pruning-ratio {r} --tensorboard"
                         command += f" --save-dir {model_dir}"
                         if s:
                             command += " --structured-pruning"
+                        if robust:
+                            command += ' --robust-train'
 
                         for key, val in atk.items():
                             command += f" --{key} {val}"
@@ -137,6 +139,8 @@ def gen_commands_victim():
                             2, k, a, r)
                         if s:
                             model_name += "_struct"
+                        if robust:
+                            model_name += '_robust'
 
                         if not os.path.exists(os.path.join(atk_path, model_name)):
                             commands.append(command)
@@ -144,12 +148,12 @@ def gen_commands_victim():
 
 
 if __name__ == "__main__":
-    commands = gen_commands_eval_old()
-    print(len(commands))
-    run_commands(list(range(6)) * 8, commands, call=True,
-                 suffix="commands", shuffle=False, delay=0.5)
-
-    # commands = gen_commands_victim()
+    # commands = gen_commands_eval_old()
     # print(len(commands))
-    # run_commands([0, 1, 4, 5, 6, 7] * 4, commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
-    #              suffix="commands", shuffle=False, delay=1)
+    # run_commands(list(range(6)) * 8, commands, call=True,
+    #              suffix="commands", shuffle=False, delay=0.5)
+
+    commands = gen_commands_victim()
+    print(len(commands))
+    run_commands(list(range(6)) * 3, commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
+                 suffix="commands", shuffle=False, delay=1)
