@@ -5,6 +5,7 @@ import shutil
 import torch
 
 import torchattack.torchattacks as atk
+import impl_atk
 
 
 def generate_attack_images(model, loader, atk, save_dir=None):
@@ -35,6 +36,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
         target = target.long()
 
         image_adv = atk(image, target).detach()
+
         with torch.no_grad():
             ori_out = model(image).detach()
             adv_out = model(image_adv).detach()  # Test-time augmentation
@@ -114,6 +116,8 @@ def get_attack(model, name, args):
         if args.norm == "Linf":
             args.eps /= 255
         return atk.Square(model, norm=args.norm, eps=args.eps, n_queries=args.n_queries)
+    elif name == "zosignsgd":
+        return impl_atk.ZoSignSgd(model)
     else:
         raise NotImplementedError(
             "Attack method {} is not implemented!".format(name))
