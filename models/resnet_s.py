@@ -80,11 +80,11 @@ class BasicBlock(nn.Module):
                      nn.BatchNorm2d(self.expansion * planes)
                 )
         
-        if args.activation_function == "relu":
+        if args.act_func == "relu":
             self.mod = nn.ReLU(inplace=True)
-        elif args.activation_function == 'tanh':
+        elif args.act_func == 'tanh':
             self.mod = nn.Tanh()
-        elif args.activation_function == 'elu':
+        elif args.act_func == 'elu':
             self.mod = nn.ELU(inplace=True)
 
     def forward(self, x):
@@ -110,11 +110,11 @@ class ResNet(nn.Module):
         self.layer3 = self._make_layer(args, block, 64, num_blocks[2], stride=2)
         self.linear = nn.Linear(64, num_classes)
 
-        if args.activation_function == "relu":
+        if args.act_func == "relu":
             self.mod = nn.ReLU(inplace=True)
-        elif args.activation_function == 'tanh':
+        elif args.act_func == 'tanh':
             self.mod = nn.Tanh()
-        elif args.activation_function == 'elu':
+        elif args.act_func == 'elu':
             self.mod = nn.ELU(inplace=True)
 
         self.apply(_weights_init)

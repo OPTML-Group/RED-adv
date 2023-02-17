@@ -32,11 +32,11 @@ class VGG(nn.Module):
     def _make_layers(self, args, cfg):
         layers = []
         in_channels = 3
-        if args.activation_function == "relu":
+        if args.act_func == "relu":
             self.mod = nn.ReLU(inplace=True)
-        elif args.activation_function == 'tanh':
+        elif args.act_func == 'tanh':
             self.mod = nn.Tanh()
-        elif args.activation_function == 'elu':
+        elif args.act_func == 'elu':
             self.mod = nn.ELU(inplace=True)
         
         for x in cfg:

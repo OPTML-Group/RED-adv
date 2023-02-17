@@ -17,7 +17,7 @@ def conv1x1(in_planes, out_planes, stride=1):
 
 def conv(args, channels_in, channels_out, kernel_size=3, stride=1, padding= 0,  groups=1, dilation=1):
     kernel_size = args.kernel_size
-    padding = int((args.kernel_size-1)/2),
+    padding = int((kernel_size-1)/2),
     
     return nn.Conv2d(channels_in, channels_out,
                          kernel_size=kernel_size, stride=stride, padding=padding,
@@ -38,14 +38,14 @@ class BasicBlock(nn.Module):
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
         kernel_size=args.kernel_size
-        if args.activation_function == "relu":
+        if args.act_func == "relu":
             self.mod = nn.ReLU(inplace=True)
-        elif args.activation_function == 'tanh':
+        elif args.act_func == 'tanh':
             self.mod = nn.Tanh()
-        elif args.activation_function == 'elu':
+        elif args.act_func == 'elu':
             self.mod = nn.ELU(inplace=True)
-        self.conv1 = conv(args, inplanes, planes, kernel_size=args.kernel_size, stride=stride, padding=int((args.kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
-        self.conv2 = conv(args, planes, planes, kernel_size=args.kernel_size, stride=1, padding=int((args.kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
+        self.conv1 = conv(args, inplanes, planes, kernel_size=kernel_size, stride=stride, padding=int((kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
+        self.conv2 = conv(args, planes, planes, kernel_size=kernel_size, stride=1, padding=int((kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
         # self.conv1 = conv3x3(inplanes, planes, stride)
         # print('planes is {}'.format(planes))
         self.bn1 = norm_layer(planes)
@@ -144,13 +144,13 @@ class ResNet(nn.Module):
 
         if not imagenet:
             kernel_size=args.kernel_size
-            if args.activation_function == "relu":
+            if args.act_func == "relu":
                 self.mod = nn.ReLU(inplace=True)
-            elif args.activation_function == 'tanh':
+            elif args.act_func == 'tanh':
                 self.mod = nn.Tanh()
-            elif args.activation_function == 'elu':
+            elif args.act_func == 'elu':
                 self.mod = nn.ELU(inplace=True)
-            self.conv1 = conv(args, 3, self.inplanes, kernel_size=args.kernel_size, stride=1, padding=int((args.kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
+            self.conv1 = conv(args, 3, self.inplanes, kernel_size=kernel_size, stride=1, padding=int((kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
             # self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1, bias=False)
             self.bn1 = norm_layer(self.inplanes)
             # self.relu = nn.ReLU(inplace=True)
