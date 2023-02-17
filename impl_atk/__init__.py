@@ -1,1 +1,1 @@
-from zosignsgd import ZoSignSgd
+from .zosignsgd import ZoSignSgd
