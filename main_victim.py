@@ -12,8 +12,7 @@ def main():
     utils.set_seed(args.seed)
 
     loader = datasets.CIFAR10(dir=args.dataset_dir, batch_size=args.batch_size)
-    model = models.ResNet9(num_classes=args.num_classes,
-                           kernel_size=args.kernel_size, act_func=args.act_func)
+    model = models.get_model(args.arch, args)
     model = model.cuda()
 
     prefix = "seed{}_kernel{}_act{}_prune{}_".format(

@@ -38,8 +38,8 @@ def training_args(parser):
 
 
 def pruning_args(parser):
-    parser.add_argument('--prune', type=str, default="omp",
-                        help="method to prune")
+    # parser.add_argument('--prune', type=str, default="omp",
+    #                     help="method to prune")
     parser.add_argument('--pruning-ratio', type=float, default=0.0,
                         choices=[0.0, 0.375, 0.625],
                         help='pruning ratio')
@@ -50,6 +50,8 @@ def pruning_args(parser):
 
 
 def model_args(parser):
+    parser.add_argument('--arch', type=str, default="resnet9",
+                        choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11'])
     parser.add_argument('--act-func', type=str, default="relu",
                         choices=["relu", "tanh", "elu"])
     parser.add_argument('--kernel-size', type=int,
