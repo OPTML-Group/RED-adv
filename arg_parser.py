@@ -60,7 +60,7 @@ def model_args(parser):
 
 def attack_args(parser):
     parser.add_argument('--attack', type=str, default=None,
-                        choices=["pgd", "pgdl2", "fgsm", "cw", "square", "autoattack", "zosignsgd"])
+                        choices=["pgd", "pgdl2", "fgsm", "cw", "square", "autoattack", "zosignsgd", "zosgd"])
     parser.add_argument('--attack-save-dir', type=str, default="attack_img")
     parser.add_argument('--steps', type=int, default=10)
     parser.add_argument('--eps', type=float, default=8/255)

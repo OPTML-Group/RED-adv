@@ -120,6 +120,10 @@ def get_attack(model, name, args):
         if args.norm == "Linf":
             args.eps /= 255
         return impl_atk.ZoSignSgd(model, eps=args.eps, norm=args.norm)
+    elif name == "zosgd":
+        if args.norm == "Linf":
+            args.eps /= 255
+        return impl_atk.ZoSgd(model, eps=args.eps, norm=args.norm)
     else:
         raise NotImplementedError(
             "Attack method {} is not implemented!".format(name))
