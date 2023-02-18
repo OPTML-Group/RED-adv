@@ -117,7 +117,9 @@ def get_attack(model, name, args):
             args.eps /= 255
         return atk.Square(model, norm=args.norm, eps=args.eps, n_queries=args.n_queries)
     elif name == "zosignsgd":
-        return impl_atk.ZoSignSgd(model)
+        if args.norm == "Linf":
+            args.eps /= 255
+        return impl_atk.ZoSignSgd(model, eps=args.eps, norm=args.norm)
     else:
         raise NotImplementedError(
             "Attack method {} is not implemented!".format(name))

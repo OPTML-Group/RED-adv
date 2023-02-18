@@ -10,7 +10,7 @@ parsing_dir = os.path.join(workspace, "parsing_models")
 kernels = [3, 5, 7]
 acts = ["relu", "tanh", "elu"]
 ratios = [0.0, 0.375, 0.625]
-struct = [True, False]
+struct = [False, True]
 
 attacks = []
 attacks += [
@@ -54,6 +54,9 @@ attacks += [
     {'attack': 'cw', "cw-c": 100, "cw-kappa": 0},
     {'attack': 'cw', "cw-c": 100, "cw-kappa": 0.1},
     {'attack': 'cw', "cw-c": 100, "cw-kappa": 1},
+]
+attacks = [
+    {'attack': 'zosignsgd', 'eps': 8, 'norm': 'Linf'}
 ]
 
 def get_atk_name(atk):
@@ -142,11 +145,12 @@ def gen_commands_victim(robust=True):
                         if robust:
                             model_name += '_robust'
 
-                        if not os.path.exists(os.path.join(atk_path, model_name, 'ori_pred.pt')):
-                            # commands.append(command)
-                            path = f"/localscratch2/ljcc/results/{model_name}_omp_2/checkpoint_75.pt"
-                            if idx == 0 or idx > 0 and os.path.exists(path):
-                                commands.append(command)
+                        commands.append(command)
+
+                        # if not os.path.exists(os.path.join(atk_path, model_name, 'ori_pred.pt')):
+                        #     path = f"/localscratch2/ljcc/results/{model_name}_omp_2/checkpoint_75.pt"
+                        #     if idx == 0 or idx > 0 and os.path.exists(path):
+                        #         commands.append(command)
     return commands
 
 
@@ -156,7 +160,7 @@ if __name__ == "__main__":
     # run_commands(list(range(6)) * 8, commands, call=True,
     #              suffix="commands", shuffle=False, delay=0.5)
 
-    commands = gen_commands_victim()
+    commands = gen_commands_victim(robust=False)
     print(len(commands))
-    run_commands(list(range(8)) * 4, commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
+    run_commands(list(range(8)) * 1 if True else [0], commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
                  suffix="commands", shuffle=False, delay=1)
