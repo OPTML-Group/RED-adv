@@ -3,8 +3,8 @@ import torch.nn as nn
 
 
 def _zosgd(X, y, model, steps=500, eta=0.0005, eps=8/255,
-              mean=[125.307/255, 122.961/255, 113.8575/255], std=[51.5865/255, 50.847/255, 51.255/255],
-              q=10, mu=0.01, sign=False):
+           mean=[125.307/255, 122.961/255, 113.8575/255], std=[51.5865/255, 50.847/255, 51.255/255],
+           q=10, mu=0.01, sign=False, est_time=1):
     n_channels = len(mean)
     mean = torch.tensor(mean).reshape(1, n_channels, 1, 1).cuda()
     std = torch.tensor(std).reshape(1, n_channels, 1, 1).cuda()
@@ -21,14 +21,28 @@ def _zosgd(X, y, model, steps=500, eta=0.0005, eps=8/255,
     with torch.no_grad():
         for i in range(steps):
             gs_t = torch.zeros_like(X_adv)  # be careful
-            X_adv_loss = loss_fn(model((X_adv - mean)/std), y)
-            for _ in range(q):
+
+            if est_time == 1:
+                X_adv_loss = loss_fn(model((X_adv - mean)/std), y)
+
+            for _ in range(q // est_time):
                 z = torch.randn_like(X_adv)
                 exp_noise = z / z.norm(dim=[1, 2, 3], p=2, keepdim=True)
-                fxs_t = X_adv + mu * exp_noise
 
-                est_deriv = (loss_fn(model((fxs_t - mean)/std), y) -
-                             X_adv_loss) / mu
+                if est_time == 1:
+                    x_1 = X_adv + mu * exp_noise
+
+                    est_deriv = (loss_fn(model((x_1 - mean)/std), y) -
+                                 X_adv_loss) / mu
+                elif est_time == 2:
+                    x_1 = X_adv + mu * exp_noise
+                    x_2 = X_adv - mu * exp_noise
+                    est_deriv = (loss_fn(model((x_1 - mean)/std), y) -
+                                 loss_fn(model((x_2 - mean)/std), y)) / 2 / mu
+                else:
+                    raise NotImplementedError(
+                        f"est_time {est_time} not implemented")
+
                 gs_t += est_deriv.reshape(-1, *[1] * num_axes) * exp_noise
             gs_t = gs_t / q
             if sign:
@@ -51,35 +65,36 @@ def _zosgd(X, y, model, steps=500, eta=0.0005, eps=8/255,
     return X_adv
 
 
-class ZoSignSgd:
-    def __init__(self, model, eps, norm):
+class _Impl:
+    def __init__(self, model, eps, norm, sign, est_time):
         self.model = model
         self.norm = norm
-        # TODO: impl L2 and Linf proj
+        # TODO: impl L2 proj
         self.eps = eps
         self.mean = [0, 0, 0]
         self.std = [1, 1, 1]
+
+        self.sign = sign
+        self.est_time = est_time
 
     def set_normalization_used(self, mean, std):
         self.mean = mean
         self.std = std
 
     def __call__(self, image, target):
-        return _zosgd(image, target, self.model, mean=self.mean, std=self.std, eps=self.eps, sign=True)
+        return _zosgd(image, target, self.model, mean=self.mean, std=self.std, eps=self.eps, sign=self.sign, est_time=self.est_time)
 
 
-class ZoSgd:
+class ZoSignSgd(_Impl):
     def __init__(self, model, eps, norm):
-        self.model = model
-        self.norm = norm
-        # TODO: impl L2 and Linf proj
-        self.eps = eps
-        self.mean = [0, 0, 0]
-        self.std = [1, 1, 1]
+        super().__init__(model, eps, norm, sign=True, est_time=1)
 
-    def set_normalization_used(self, mean, std):
-        self.mean = mean
-        self.std = std
 
-    def __call__(self, image, target):
-        return _zosgd(image, target, self.model, mean=self.mean, std=self.std, eps=self.eps, sign=False)
+class ZoSgd(_Impl):
+    def __init__(self, model, eps, norm):
+        super().__init__(model, eps, norm, sign=False, est_time=1)
+
+
+class Bandit(_Impl):
+    def __init__(self, model, eps, norm):
+        super().__init__(model, eps, norm, sign=False, est_time=2)

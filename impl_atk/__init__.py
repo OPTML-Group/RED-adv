@@ -1,1 +1,1 @@
-from .zosgd import ZoSignSgd, ZoSgd
+from .zosgd import ZoSignSgd, ZoSgd, Bandit

@@ -56,13 +56,17 @@ attacks += [
     {'attack': 'cw', "cw-c": 100, "cw-kappa": 1},
 ]
 attacks = [
-    {'attack': 'zosignsgd', 'eps': 4, 'norm': 'Linf'},
-    {'attack': 'zosignsgd', 'eps': 8, 'norm': 'Linf'},
-    {'attack': 'zosignsgd', 'eps': 12, 'norm': 'Linf'},
-    {'attack': 'zosgd', 'eps': 4, 'norm': 'Linf'},
-    {'attack': 'zosgd', 'eps': 8, 'norm': 'Linf'},
-    {'attack': 'zosgd', 'eps': 12, 'norm': 'Linf'},
+    # {'attack': 'zosignsgd', 'eps': 4, 'norm': 'Linf'},
+    # {'attack': 'zosignsgd', 'eps': 8, 'norm': 'Linf'},
+    # {'attack': 'zosignsgd', 'eps': 12, 'norm': 'Linf'},
+    # {'attack': 'zosgd', 'eps': 4, 'norm': 'Linf'},
+    # {'attack': 'zosgd', 'eps': 8, 'norm': 'Linf'},
+    # {'attack': 'zosgd', 'eps': 12, 'norm': 'Linf'},
+    # {'attack': 'bandit', 'eps': 4, 'norm': 'Linf'},
+    {'attack': 'bandit', 'eps': 8, 'norm': 'Linf'},
+    # {'attack': 'bandit', 'eps': 12, 'norm': 'Linf'},
 ]
+
 
 def get_atk_name(atk):
     dir_name = []
@@ -165,7 +169,9 @@ if __name__ == "__main__":
     # run_commands(list(range(6)) * 8, commands, call=True,
     #              suffix="commands", shuffle=False, delay=0.5)
 
+    debug = False
     commands = gen_commands_victim(robust=False)
     print(len(commands))
-    run_commands(list(range(8)) * 1 if False else [0], commands, call=True, ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
+    run_commands([1, 2, 3, 4, 5, 6, 7, 0] if not debug else [0], commands, call=not debug, 
+                 ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
                  suffix="commands", shuffle=False, delay=1)

@@ -7,3 +7,8 @@ CUDA_VISIBLE_DEVICES=0 python main_victim.py --kernel-size 3 --act-func relu --p
 ```
 CUDA_VISIBLE_DEVICES=0 python main_victim.py --kernel-size 3 --act-func relu --pruning-ratio 0.0 --tensorboard --save-dir /localscratch2/ljcc/results --attack zosgd --eps 8 --norm Linf --attack-save-dir /localscratch2/ljcc/attack_img/attack_zosgd_eps_8_norm_Linf --dataset-dir /localscratch2/tmp/cifar0
 ```
+
+### Bandit
+```
+CUDA_VISIBLE_DEVICES=0 python main_victim.py --kernel-size 3 --act-func relu --pruning-ratio 0.0 --tensorboard --save-dir /localscratch2/ljcc/results --attack bandit --eps 8 --norm Linf --attack-save-dir /localscratch2/ljcc/attack_img/attack_bandit_eps_8_norm_Linf --dataset-dir /localscratch2/tmp/cifar0
+```
