@@ -144,7 +144,7 @@ def grep_from_partial_result(dir_path):
 
 def _concat_and_save(x_advs, deltas, labels, save_dir):
     os.makedirs(save_dir, exist_ok=True)
-    delta_name, x_adv_name, label_name = output_names
+    x_adv_name, delta_name, label_name = output_names
 
     x_advs = torch.cat(x_advs, axis=0).float()
     deltas = torch.cat(deltas, axis=0).float()
@@ -204,7 +204,15 @@ def grep_setting(atk_dir, save_dir, setting_name, robust, full):
         grep_atk_dir = os.path.join(atk_dir, atk_name)
         grep_save_dir = os.path.join(save_dir, setting_name, atk_name)
 
-        if not full and _check_data_exists(grep_save_dir, output_names):
+        if _check_data_exists(grep_save_dir, output_names):
+            # datas = _load_datas(grep_save_dir, output_names)
+            # print(f"Check {atk_name} {setting_name}")
+            # assert datas[0].shape == datas[1].shape
+            # print(datas[0].max(), datas[1].max(), datas[0].abs().mean(), datas[1].abs().mean())
+            # if datas[0].abs().mean() < datas[1].abs().mean():
+            #     print("Swap")
+            #     datas[0], datas[1] = datas[1], datas[0]
+            #     _save_datas(grep_save_dir, output_names, datas)
             continue
 
         print(f"Grep from: '{grep_atk_dir}'")
@@ -226,7 +234,7 @@ def grep_data_settings():
     data_arch = f"{dataset_name}_{arch_name}"
     atk_dir = gargs.ATK_DIR
     save_dir = os.path.join(gargs.GREP_DIR, data_arch)
-    grep_setting(atk_dir, save_dir, "origin", False, False)
+    # grep_setting(atk_dir, save_dir, "origin", False, False)
     grep_setting(atk_dir, save_dir, "robust", True, False)
     grep_setting(atk_dir, save_dir, "robust_all", True, True)
 

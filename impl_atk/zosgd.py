@@ -95,6 +95,6 @@ class ZoSgd(_Impl):
         super().__init__(model, eps, norm, sign=False, est_time=1)
 
 
-class Bandit(_Impl):
+class Nes(_Impl):
     def __init__(self, model, eps, norm):
         super().__init__(model, eps, norm, sign=False, est_time=2)

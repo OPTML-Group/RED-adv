@@ -6,6 +6,7 @@ WORKSPACE_DIR = "/localscratch/ljcc"
 ATK_DIR = os.path.join(WORKSPACE2_DIR, "attack_img")
 MODEL_DIR = os.path.join(WORKSPACE2_DIR, "results")
 PARSING_DIR = os.path.join(WORKSPACE2_DIR, "parsing_models")
+PARSING_LOG_DIR = os.path.join(WORKSPACE2_DIR, "test_log")
 
 GREP_DIR = os.path.join(WORKSPACE_DIR, "grep_datas")
 
@@ -28,8 +29,8 @@ ATTACKS += [
     {'attack': 'pgdl2', "eps": 1.5, "alpha": 0.3},
     {'attack': 'fgsm', "eps": 4},
     {'attack': 'fgsm', "eps": 8},
+    {'attack': 'fgsm', "eps": 12},
     {'attack': 'fgsm', "eps": 16},
-    {'attack': 'fgsm', "eps": 32},
 ]
 ATTACKS += [
     {'attack': 'square', "eps": 4, "norm": 'Linf'},
@@ -62,10 +63,13 @@ ATTACKS += [
     {'attack': 'zosignsgd', 'eps': 4, 'norm': 'Linf'},
     {'attack': 'zosignsgd', 'eps': 8, 'norm': 'Linf'},
     {'attack': 'zosignsgd', 'eps': 12, 'norm': 'Linf'},
-    # {'attack': 'zosgd', 'eps': 4, 'norm': 'Linf'},
-    # {'attack': 'zosgd', 'eps': 8, 'norm': 'Linf'},
-    # {'attack': 'zosgd', 'eps': 12, 'norm': 'Linf'},
-    # {'attack': 'bandit', 'eps': 4, 'norm': 'Linf'},
-    # {'attack': 'bandit', 'eps': 8, 'norm': 'Linf'},
-    # {'attack': 'bandit', 'eps': 12, 'norm': 'Linf'},
+    {'attack': 'zosignsgd', 'eps': 16, 'norm': 'Linf'},
+    {'attack': 'zosgd', 'eps': 4, 'norm': 'Linf'},
+    {'attack': 'zosgd', 'eps': 8, 'norm': 'Linf'},
+    {'attack': 'zosgd', 'eps': 12, 'norm': 'Linf'},
+    {'attack': 'zosgd', 'eps': 16, 'norm': 'Linf'},
+    {'attack': 'nes', 'eps': 4, 'norm': 'Linf'},
+    {'attack': 'nes', 'eps': 8, 'norm': 'Linf'},
+    {'attack': 'nes', 'eps': 12, 'norm': 'Linf'},
+    {'attack': 'nes', 'eps': 16, 'norm': 'Linf'},
 ]

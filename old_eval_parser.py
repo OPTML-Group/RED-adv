@@ -25,6 +25,8 @@ parser.add_argument('--input-type', type=str, default='delta')
 
 parser.add_argument('--save_folder', type=str, default="PGD_eps8_alpha1_steps10")
 
+parser.add_argument('--log_dir', type=str)
+
 args = parser.parse_args()
 
 seed = args.seed
@@ -115,7 +117,6 @@ name1 = os.path.basename(args.input_folder)
 name2 = os.path.basename(args.save_folder)
 name3 = os.path.basename(os.path.dirname(args.save_folder))
 file_name = f"data_{name1}___model_{name3}__{name2}.log"
-log_dir = "/localscratch2/ljcc/test_log"
-os.makedirs(log_dir, exist_ok=True)
-fout = open(os.path.join(log_dir, file_name), 'w')
+os.makedirs(args.log_dir, exist_ok=True)
+fout = open(os.path.join(args.log_dir, file_name), 'w')
 [print(round(test_acc_list[i].item(),2), file = fout) for i in range(3)]
