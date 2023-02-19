@@ -26,7 +26,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     shutil.rmtree(save_dir, ignore_errors=True)
 
     # x_advs, deltas,  = [], []
-    targets, adv, adv_outs, delta_all, ori_pred = [], [], [], [], []
+    targets, adv_all, adv_preds, delta_all, ori_preds = [], [], [], [], []
 
     n_datas, n_correct_success, n_success = 0, 0, 0
 
@@ -41,10 +41,11 @@ def generate_attack_images(model, loader, atk, save_dir=None):
             ori_out = model(image).detach()
             adv_out = model(image_adv).detach()  # Test-time augmentation
 
-            pred = adv_out.argmax(1)
+            adv_pred = adv_out.argmax(1)
+            ori_pred = ori_out.argmax(1)
 
-            idx = ori_out.argmax(1).eq(target) * pred.ne(target)
-            idx_adv = adv_out.argmax(1).ne(target)
+            idx = ori_pred.eq(target) * adv_pred.ne(target)
+            idx_adv = adv_pred.ne(target)
 
             n_datas += len(idx)
             n_correct_success += sum(idx).item()
@@ -58,34 +59,34 @@ def generate_attack_images(model, loader, atk, save_dir=None):
             # x_advs.append(x_adv.cpu())
             # deltas.append(adv_delta.cpu())
 
-            adv.append(image_adv.detach().cpu())
+            adv_all.append(image_adv.detach().cpu())
             delta_all.append(delta.detach().cpu())
 
-            ori_pred.append(ori_out.cpu())
-            adv_outs.append(pred.cpu())
+            ori_preds.append(ori_pred.cpu())
+            adv_preds.append(adv_pred.cpu())
             targets.append(target.detach().cpu())
 
     # x_advs = torch.cat(x_advs, axis=0)
     # deltas = torch.cat(deltas, axis=0)
 
-    adv = torch.cat(adv, axis=0)
+    adv_all = torch.cat(adv_all, axis=0)
     delta_all = torch.cat(delta_all, axis=0)
 
     targets = torch.cat(targets, axis=0)
-    adv_outs = torch.cat(adv_outs, axis=0)
-    ori_pred = torch.cat(ori_pred, axis=0)
+    adv_preds = torch.cat(adv_preds, axis=0)
+    ori_preds = torch.cat(ori_preds, axis=0)
 
     os.makedirs(save_dir, exist_ok=True)
 
     if save_dir is not None:
         # torch.save(x_advs, path_x_adv)
         # torch.save(deltas, path_delta)
-        torch.save(adv, path_adv_all)
+        torch.save(adv_all, path_adv_all)
         torch.save(delta_all, path_delta_all)
 
         torch.save(targets, path_target)
-        torch.save(adv_outs, path_adv_pred)
-        torch.save(ori_pred, path_ori_pred)
+        torch.save(adv_preds, path_adv_pred)
+        torch.save(ori_preds, path_ori_pred)
     
         with open(path_acc, 'w') as fout:
             print("n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout)
