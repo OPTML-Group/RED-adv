@@ -29,7 +29,7 @@ def training_args(parser):
     parser.add_argument('--epochs', default=75, type=int,
                         help='number of total epochs to run')
     parser.add_argument('--save-freq', type=int,
-                        default=5, help='num of epochs for saving checkpoint')
+                        default=15, help='num of epochs for saving checkpoint')
     parser.add_argument('--num_classes', type=int, default=10)
     parser.add_argument('--robust-train', action="store_true",
                         help="Robustive training")
@@ -51,7 +51,7 @@ def pruning_args(parser):
 
 def model_args(parser):
     parser.add_argument('--arch', type=str, default="resnet9",
-                        choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11'])
+                        choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11', 'vgg13'])
     parser.add_argument('--act-func', type=str, default="relu",
                         choices=["relu", "tanh", "elu"])
     parser.add_argument('--kernel-size', type=int,
