@@ -15,5 +15,7 @@ def get_model(name, args):
         return resnet20(args)
     elif name == "vgg11":
         return VGG(args, 'VGG11')
+    elif name == "vgg13":
+        return VGG(args, 'VGG13')
     else:
         raise NotImplementedError(f"Arch {name} not Implemented!")
