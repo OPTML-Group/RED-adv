@@ -11,7 +11,10 @@ def main():
     args = arg_parser.parse_args_victim_training()
     utils.set_seed(args.seed)
 
-    loader = datasets.CIFAR10(dir=args.dataset_dir, batch_size=args.batch_size)
+    if args.dataset == 'CIFAR10':
+        loader = datasets.CIFAR10(dir=args.dataset_dir, batch_size=args.batch_size)
+    elif args.dataset == 'TinyImageNet':
+        loader = datasets.TinyImageNet(dir=args.dataset_dir, batch_size=args.batch_size)
     model = models.get_model(args.arch, args)
     model = model.cuda()
 

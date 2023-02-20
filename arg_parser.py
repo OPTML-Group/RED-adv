@@ -14,6 +14,8 @@ def general_args(parser):
                         help='The directory used to save the trained models')
     parser.add_argument('--tensorboard', action='store_true',
                         help='Using tensorboard during training.')
+    parser.add_argument('--dataset', default="CIFAR10", type=str,
+                        help='dataset name, e.g., CIFAR10, CIFAR100, TinyImageNet')
     parser.add_argument('--dataset-dir', type=str,
                         help='dataset dir')
 
