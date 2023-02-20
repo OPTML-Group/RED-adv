@@ -1,0 +1,57 @@
+from . import attack as _atk
+
+KERNEL_SIZES = [3, 5, 7]
+ACTIVATION_FUNCTIONS = ["relu", "tanh", "elu"]
+PRUNING_RATIOS = [0.0, 0.375, 0.625]
+
+VALID_DATASETS = ["cifar10"]
+VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']
+VALID_SETTINGS = ['origin', 'robust', 'robust_all']
+
+
+def _get_exps():
+    archs = VALID_ARCHITECTURES
+    datasets = VALID_DATASETS
+    settings = VALID_SETTINGS
+    default_arch = archs[0]
+    default_data = datasets[0]
+    default_setting = settings[0]
+
+    # default
+    exp_combs = [dict(
+        arch=default_arch,
+        data=default_data,
+        setting=default_setting,
+        attacks=_atk.ALL_ATTACKS
+    )]
+    # arch ablation
+    for arch in archs[1:]:
+        s = dict(
+            arch=arch,
+            data=default_data,
+            setting=default_setting,
+            attacks=_atk.WHITEBOX_ATTACKS
+        )
+        exp_combs.append(s)
+    # dataset ablation
+    for data in datasets[1:]:
+        s = dict(
+            arch=default_arch,
+            data=data,
+            setting=default_setting,
+            attacks=_atk.WHITEBOX_ATTACKS
+        )
+        exp_combs.append(s)
+    # robust ablation
+    for setting in settings[1:]:
+        s = dict(
+            arch=default_arch,
+            data=default_data,
+            setting=setting,
+            attacks=_atk.WHITEBOX_ATTACKS
+        )
+        exp_combs.append(s)
+    return exp_combs
+
+
+EXPS = _get_exps()

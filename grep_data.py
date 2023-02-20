@@ -103,17 +103,17 @@ def _clean_up_all():
     atk_names = os.listdir(path)
     for atk_name in atk_names:
         atk_path = os.path.join(path, atk_name)
-        for output_name in output_names:
-            output_path = os.path.join(atk_path, output_name)
-            if os.path.exists(output_path):
-                print(output_path)
-                grep_dir = os.path.join(gargs.GREP_DIR, "cifar10_resnet9", "origin", atk_name)
-                os.makedirs(grep_dir, exist_ok=True)
-                os.system(f"mv {output_path} {grep_dir}")
-    #     model_names = os.listdir(atk_path)
-    #     for model_name in model_names:
-    #         dir_path = os.path.join(atk_path, model_name)
-    #         clean_up_result(dir_path)
+        # for output_name in output_names:
+        #     output_path = os.path.join(atk_path, output_name)
+        #     if os.path.exists(output_path):
+        #         print(output_path)
+        #         grep_dir = os.path.join(gargs.GREP_DIR, "cifar10_resnet9", "origin", atk_name)
+        #         os.makedirs(grep_dir, exist_ok=True)
+        #         os.system(f"mv {output_path} {grep_dir}")
+        model_names = os.listdir(atk_path)
+        for model_name in model_names:
+            dir_path = os.path.join(atk_path, model_name)
+            clean_up_result(dir_path)
 # if __name__ == "__main__":
 #     _clean_up_all()
 #     exit(0)
@@ -218,25 +218,26 @@ def grep_setting(atk_dir, save_dir, setting_name, robust, full):
         print(f"Grep from: '{grep_atk_dir}'")
         print(f"Grep to: '{grep_save_dir}'")
 
-        try:
-            grep_data_correct(grep_atk_dir, grep_save_dir, robust=robust, full_data=full)
-        except AssertionError as inst:
-            print(inst)
-        except Exception as inst:
-            raise inst
-        finally:
-            print(f"Successful grep to: {grep_save_dir}")
+        # try:
+        grep_data_correct(grep_atk_dir, grep_save_dir, robust=robust, full_data=full)
+        # except AssertionError as inst:
+        #     print(inst)
+        # except Exception as inst:
+        #     raise inst
+        # finally:
+        #     print(f"Successful grep to: {grep_save_dir}")
 
 
-def grep_data_settings():
-    dataset_name = "cifar10"
-    arch_name = "resnet9"
-    data_arch = f"{dataset_name}_{arch_name}"
-    atk_dir = gargs.ATK_DIR
+def grep_data_settings(dataset, arch):
+    data_arch = f"{dataset}_{arch}"
+    atk_dir = os.path.join(gargs.ATK_DIR, data_arch)
     save_dir = os.path.join(gargs.GREP_DIR, data_arch)
-    # grep_setting(atk_dir, save_dir, "origin", False, False)
-    grep_setting(atk_dir, save_dir, "robust", True, False)
-    grep_setting(atk_dir, save_dir, "robust_all", True, True)
+    grep_setting(atk_dir, save_dir, "origin", False, False)
+    # grep_setting(atk_dir, save_dir, "robust", True, False)
+    # grep_setting(atk_dir, save_dir, "robust_all", True, True)
 
 if __name__ == "__main__":
-    grep_data_settings()
+    dataset = "cifar10"
+    archs = ["resnet18", "vgg11", "vgg13", "resnet20s"]
+    for arch in archs:
+        grep_data_settings(dataset, arch)
