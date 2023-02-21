@@ -29,11 +29,9 @@ def _load_datas(dir, names):
 
 
 def _save_datas(dir, names, datas):
-    ret = []
     for name, data in zip(names, datas):
         path = os.path.join(dir, name)
-        item = torch.save(data, path)
-    return ret
+        torch.save(data, path)
 
 
 def _check_datas(datas, after=False, log_path=None):
@@ -205,9 +203,14 @@ def grep_data_correct(dir, save_dir, robust, full_data):
     _concat_and_save(x_advs, deltas, labels, save_dir)
 
 
-def grep_setting(atk_dir, save_dir, setting_name, robust, full):
+def grep_setting(dataset, arch, setting_name, attacks):
+    data_arch = f"{dataset}_{arch}"
+    atk_dir = os.path.join(gargs.ATK_DIR, data_arch)
+    save_dir = os.path.join(gargs.GREP_DIR, data_arch)
     print(f"Setting: {setting_name}")
-    for atk in gargs.ALL_ATTACKS:
+    robust = "robust" in setting_name
+    full = "all" in setting_name
+    for atk in attacks:
         atk_name = run.get_attack_name(atk)
 
         grep_atk_dir = os.path.join(atk_dir, atk_name)
@@ -238,21 +241,6 @@ def grep_setting(atk_dir, save_dir, setting_name, robust, full):
             print(f"Successful grep to: {grep_save_dir}")
 
 
-def grep_data_settings(dataset, arch):
-    data_arch = f"{dataset}_{arch}"
-    atk_dir = os.path.join(gargs.ATK_DIR, data_arch)
-    save_dir = os.path.join(gargs.GREP_DIR, data_arch)
-    grep_setting(atk_dir, save_dir, "origin", False, False)
-    # grep_setting(atk_dir, save_dir, "robust", True, False)
-    # grep_setting(atk_dir, save_dir, "robust_all", True, True)
-
-
 if __name__ == "__main__":
-    dataset = "cifar10"
-    archs = ['resnet9', "resnet18", "vgg11", "vgg13", "resnet20s"]
-    for arch in archs:
-        grep_data_settings(dataset, arch)
-    datasets = ["tinyimagenet"]
-    arch = 'resnet9'
-    for dataset in datasets:
-        grep_data_settings(dataset, arch)
+    for exp in gargs.EXPS:
+        grep_setting(exp['data'], exp['arch'], exp['setting'], exp["attacks"])

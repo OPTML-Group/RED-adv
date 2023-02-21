@@ -4,7 +4,7 @@ KERNEL_SIZES = [3, 5, 7]
 ACTIVATION_FUNCTIONS = ["relu", "tanh", "elu"]
 PRUNING_RATIOS = [0.0, 0.375, 0.625]
 
-VALID_DATASETS = ["cifar10", "tinyimagenet"]
+VALID_DATASETS = ["cifar10", "cifar100", "tinyimagenet"]
 VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']
 VALID_SETTINGS = ['origin', 'robust', 'robust_all']
 
@@ -35,8 +35,12 @@ def _get_exps():
         exp_combs.append(s)
     # dataset ablation
     for data in datasets[1:]:
+        if data == "tinyimagenet":
+            arch = "resnet18"
+        else:
+            arch = default_arch
         s = dict(
-            arch=default_arch,
+            arch=arch,
             data=data,
             setting=default_setting,
             attacks=_atk.WHITEBOX_ATTACKS

@@ -14,6 +14,9 @@ def main():
     if args.dataset == 'cifar10':
         loader = datasets.CIFAR10(
             dir=args.dataset_dir, ffcv_dir=args.ffcv_dir, batch_size=args.batch_size)
+    elif args.dataset == 'cifar100':
+        loader = datasets.CIFAR100(
+            dir=args.dataset_dir, ffcv_dir=args.ffcv_dir, batch_size=args.batch_size)
     elif args.dataset == 'tinyimagenet':
         loader = datasets.TinyImageNet(
             dir=args.dataset_dir, ffcv_dir=args.ffcv_dir, batch_size=args.batch_size)

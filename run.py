@@ -41,6 +41,7 @@ def gen_commands_victim(dataset, arch, attacks, robust):
                         command += f" --dataset {dataset}"
                         command += f" --save-dir {_model_dir}"
                         command += f" --arch {arch}"
+                        command += gargs.TRAINING_ARGS[dataset]
                         if s:
                             command += " --structured-pruning"
                         if robust:
@@ -75,7 +76,7 @@ def gen_commands_victim(dataset, arch, attacks, robust):
     return commands
 
 
-def gen_commands_old(dataset, arch, setting, attacks):
+def gen_commands_parsing(dataset, arch, setting, attacks):
     _data_arch_name = f"{dataset}_{arch}"
 
     _atk_dir = os.path.join(gargs.ATK_DIR, _data_arch_name)
@@ -103,7 +104,7 @@ def gen_commands_old(dataset, arch, setting, attacks):
     return commands
 
 
-def gen_commands_eval_old(dataset, arch, setting, attacks):
+def gen_commands_eval_parsing(dataset, arch, setting, attacks):
     _data_arch_name = f"{dataset}_{arch}"
 
     _atk_dir = os.path.join(gargs.ATK_DIR, _data_arch_name)
@@ -125,8 +126,9 @@ def gen_commands_eval_old(dataset, arch, setting, attacks):
                     _parsing_dir, setting, model_atk_name, tp)
                 log_dir = os.path.join(_log_dir, setting)
                 command = f"python old_eval_parser.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
-                if not os.path.exists(os.path.join(log_dir, f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")):
-                    commands.append(command)
+                if os.path.exists(output_path) and os.path.exists(atk_path):
+                    if not os.path.exists(os.path.join(log_dir, f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")):
+                        commands.append(command)
     return commands
 
 def train_victim_commands():
@@ -143,14 +145,14 @@ def train_victim_commands():
 def train_parsing_commands():
     commands = []
     for exp in gargs.EXPS:
-        commands += gen_commands_old(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
+        commands += gen_commands_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
     print(len(commands))
     return commands
 
 def test_parsing_commands():
     commands = []
     for exp in gargs.EXPS:
-        commands += gen_commands_eval_old(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
+        commands += gen_commands_eval_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
     print(len(commands))
     return commands
 

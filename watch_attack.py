@@ -33,7 +33,7 @@ def get_models(dataset, arch, robust=True, omp=2):
 # print(f"omp_1: {get_models(True,1)}")
 # print(f"omp_2: {get_models(True,2)}")
 # commands = run.gen_commands_victim(False)
-datasets = ["cifar10", "tinyimagenet"]
+datasets = ["cifar10", "cifar100", "tinyimagenet"]
 archs = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']
 
 dataset = datasets[0]
@@ -42,25 +42,23 @@ for arch in archs:
     n = get_models(dataset, arch, robust=False, omp=1)
     print(f"omp1: {n: 4d}", end='\t')
     n = get_models(dataset, arch, robust=False, omp=2)
-    print("omp2: ", n, end='\t')
-    commands = run.gen_commands_victim(dataset=dataset, arch=arch, attacks=gargs.WHITEBOX_ATTACKS, robust=False)
-    print("attack: ", len(commands), end='\t')
-    commands = run.gen_commands_old(dataset=dataset, arch=arch, setting="origin", attacks=gargs.WHITEBOX_ATTACKS)
-    print("parse: ", len(commands))
+    print("omp2: ", n)
+    # commands = run.gen_commands_victim(dataset=dataset, arch=arch, attacks=gargs.WHITEBOX_ATTACKS, robust=False)
+    # print("attack: ", len(commands), end='\t')
+    # commands = run.gen_commands_old(dataset=dataset, arch=arch, setting="origin", attacks=gargs.WHITEBOX_ATTACKS)
+    # print("parse: ", len(commands))
 
-dataset = datasets[1]
-for arch in archs[:1]:
+arch = archs[0]
+for dataset, arch in zip(datasets[1:], ['resnet9', 'resnet18']):
     print(f"data: {dataset}", end='\t')
     n = get_models(dataset, arch, robust=False, omp=1)
     print(f"omp1: {n: 4d}", end='\t')
     n = get_models(dataset, arch, robust=False, omp=2)
-    print("omp2: ", n, end='\t')
-    commands = run.gen_commands_victim(dataset=dataset, arch=arch, attacks=gargs.WHITEBOX_ATTACKS, robust=False)
-    print("attack: ", len(commands), end='\t')
-    commands = run.gen_commands_old(dataset=dataset, arch=arch, setting="origin", attacks=gargs.WHITEBOX_ATTACKS)
-    print("parse: ", len(commands))
-
-debug = False
+    print("omp2: ", n)
+    # commands = run.gen_commands_victim(dataset=dataset, arch=arch, attacks=gargs.WHITEBOX_ATTACKS, robust=False)
+    # print("attack: ", len(commands), end='\t')
+    # commands = run.gen_commands_old(dataset=dataset, arch=arch, setting="origin", attacks=gargs.WHITEBOX_ATTACKS)
+    # print("parse: ", len(commands))
 
 # victim training
 commands = []
@@ -72,7 +70,7 @@ for exp in gargs.EXPS:
     cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
     
     print(exp['data'], exp['arch'], exp['setting'], len(cmds), end=' ')
-    cmds = run.gen_commands_old(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
+    cmds = run.gen_commands_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
     print(len(cmds), end=' ')
-    cmds = run.gen_commands_eval_old(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
+    cmds = run.gen_commands_eval_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
     print(len(cmds))
