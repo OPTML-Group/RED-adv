@@ -14,14 +14,16 @@ from ffcv.writer import DatasetWriter
 
 import os
 
-def CIFAR10(dir = '/tmp', batch_size = 512):
+
+def CIFAR10(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
     datasets = {
         'train': torchvision.datasets.CIFAR10(dir, train=True, download=True),
         'test': torchvision.datasets.CIFAR10(dir, train=False, download=True)
     }
 
+    os.makedirs(ffcv_dir, exist_ok=True)
     for (name, ds) in datasets.items():
-        writer = DatasetWriter(f'{dir}/CIFAR10_{name}.beton', {
+        writer = DatasetWriter(f'{ffcv_dir}/CIFAR10_{name}.beton', {
             'image': RGBImageField(),
             'label': IntField()
         })
@@ -34,7 +36,8 @@ def CIFAR10(dir = '/tmp', batch_size = 512):
 
     loaders = {}
     for name in ['train', 'test']:
-        label_pipeline: List[Operation] = [IntDecoder(), ToTensor(), ToDevice('cuda:0'), Squeeze()]
+        label_pipeline: List[Operation] = [
+            IntDecoder(), ToTensor(), ToDevice('cuda:0'), Squeeze()]
         image_pipeline: List[Operation] = [SimpleRGBImageDecoder()]
 
         # Add image transforms and normalization
@@ -42,36 +45,40 @@ def CIFAR10(dir = '/tmp', batch_size = 512):
             image_pipeline.extend([
                 RandomHorizontalFlip(),
                 RandomTranslate(padding=2),
-                Cutout(8, tuple(map(int, CIFAR_MEAN))), # Note Cutout is done before normalization.
+                # Note Cutout is done before normalization.
+                Cutout(8, tuple(map(int, CIFAR_MEAN))),
             ])
         image_pipeline.extend([
             ToTensor(),
             ToDevice('cuda:0', non_blocking=True),
             ToTorchImage(),
             Convert(torch.float16),
-            torchvision.transforms.Normalize(CIFAR_MEAN, CIFAR_STD),  # type: ignore
+            torchvision.transforms.Normalize(
+                CIFAR_MEAN, CIFAR_STD),  # type: ignore
         ])
 
         # Create loaders
-        loaders[name] = Loader(f'{dir}/CIFAR10_{name}.beton',
-                                os_cache=True,
-                                batch_size=BATCH_SIZE,
-                                num_workers=8,
-                                order=OrderOption.RANDOM,
-                                drop_last=(name == 'train'),
-                                pipelines={'image': image_pipeline,
-                                        'label': label_pipeline})
+        loaders[name] = Loader(f'{ffcv_dir}/CIFAR10_{name}.beton',
+                               os_cache=True,
+                               batch_size=BATCH_SIZE,
+                               num_workers=8,
+                               order=OrderOption.RANDOM,
+                               drop_last=(name == 'train'),
+                               pipelines={'image': image_pipeline,
+                                          'label': label_pipeline})
     return loaders
 
-def TinyImageNet(dir = '/tmp', batch_size = 512):
+
+def TinyImageNet(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
     # before running this function, prepare TinyImageNet in "dir"
     # see TinyImageNet prepartion in ./TinyImageNet
-    # please bash run.sh in ./TinyImageNet before laoding TinyImageNet
-    datasets = {x: torchvision.datasets.ImageFolder(os.path.join(dir, x)) 
-                  for x in ['train','val','test']}
+    # please bash run.sh in ./TinyImageNet before loading TinyImageNet
+    datasets = {x: torchvision.datasets.ImageFolder(os.path.join(dir, x))
+                for x in ['train', 'test']}
 
+    os.makedirs(ffcv_dir, exist_ok=True)
     for (name, ds) in datasets.items():
-        writer = DatasetWriter(f'{dir}/TinyImageNet_{name}.beton', {
+        writer = DatasetWriter(f'{ffcv_dir}/TinyImageNet_{name}.beton', {
             'image': RGBImageField(),
             'label': IntField()
         })
@@ -84,7 +91,8 @@ def TinyImageNet(dir = '/tmp', batch_size = 512):
 
     loaders = {}
     for name in ['train', 'test']:
-        label_pipeline: List[Operation] = [IntDecoder(), ToTensor(), ToDevice('cuda:0'), Squeeze()]
+        label_pipeline: List[Operation] = [
+            IntDecoder(), ToTensor(), ToDevice('cuda:0'), Squeeze()]
         image_pipeline: List[Operation] = [SimpleRGBImageDecoder()]
 
         # Add image transforms and normalization
@@ -92,23 +100,25 @@ def TinyImageNet(dir = '/tmp', batch_size = 512):
             image_pipeline.extend([
                 RandomHorizontalFlip(),
                 RandomTranslate(padding=2),
-                Cutout(8, tuple(map(int, TinyImageNet_MEAN))), # Note Cutout is done before normalization.
+                # Note Cutout is done before normalization.
+                Cutout(8, tuple(map(int, TinyImageNet_MEAN))),
             ])
         image_pipeline.extend([
             ToTensor(),
             ToDevice('cuda:0', non_blocking=True),
             ToTorchImage(),
             Convert(torch.float16),
-            torchvision.transforms.Normalize(TinyImageNet_MEAN, TinyImageNet_STD),  # type: ignore
+            torchvision.transforms.Normalize(
+                TinyImageNet_MEAN, TinyImageNet_STD),  # type: ignore
         ])
 
         # Create loaders
-        loaders[name] = Loader(f'{dir}/TinyImageNet_{name}.beton',
-                                os_cache=True,
-                                batch_size=BATCH_SIZE,
-                                num_workers=8,
-                                order=OrderOption.RANDOM,
-                                drop_last=(name == 'train'),
-                                pipelines={'image': image_pipeline,
-                                        'label': label_pipeline})
+        loaders[name] = Loader(f'{ffcv_dir}/TinyImageNet_{name}.beton',
+                               os_cache=True,
+                               batch_size=BATCH_SIZE,
+                               num_workers=8,
+                               order=OrderOption.RANDOM,
+                               drop_last=(name == 'train'),
+                               pipelines={'image': image_pipeline,
+                                          'label': label_pipeline})
     return loaders

@@ -64,9 +64,11 @@ def _check_datas(datas, after=False, log_path=None):
             for pred in datas[2:]:
                 assert pred.ndim == 1 or pred.ndim == 2 and pred.shape[1] == 10
 
+
 def _backup(dir):
     shutil.rmtree('./temp', ignore_errors=True)
     os.system(f"cp -r {dir} ./temp")
+
 
 def clean_up_result(dir_path):
     if _check_data_exists(dir_path, full_result_names):
@@ -79,7 +81,8 @@ def clean_up_result(dir_path):
         if datas[3].ndim == 2:
             print(f"argmax datas[3]!!")
             datas[3] = datas[3].argmax(dim=1)
-        _check_datas(datas, after=True, log_path=os.path.join(dir_path, 'attack_acc.log'))
+        _check_datas(datas, after=True, log_path=os.path.join(
+            dir_path, 'attack_acc.log'))
 
         # over write!!! careful!!!!
         _backup(dir_path)
@@ -87,7 +90,8 @@ def clean_up_result(dir_path):
 
         print(f"Check '{dir_path}'")
         datas = _load_datas(dir_path, full_result_names)
-        _check_datas(datas, after=True, log_path=os.path.join(dir_path, 'attack_acc.log'))
+        _check_datas(datas, after=True, log_path=os.path.join(
+            dir_path, 'attack_acc.log'))
         print(f"Check '{dir_path}' success")
         for name in partial_result_names:
             path = os.path.join(dir_path, name)
@@ -97,6 +101,7 @@ def clean_up_result(dir_path):
                     from IPython import embed
                     embed()
                 os.remove(path)
+
 
 def _clean_up_all():
     path = gargs.ATK_DIR
@@ -118,10 +123,12 @@ def _clean_up_all():
 #     _clean_up_all()
 #     exit(0)
 
+
 def grep_from_full_result(dir_path, full=False):
     datas = _load_datas(
         dir_path, full_result_names)
-    _check_datas(datas, after=True, log_path=os.path.join(dir_path, 'attack_acc.log'))
+    _check_datas(datas, after=True, log_path=os.path.join(
+        dir_path, 'attack_acc.log'))
     x_adv, delta, adv_pred, ori_pred, target = datas
 
     if full:
@@ -181,7 +188,8 @@ def grep_data_correct(dir, save_dir, robust, full_data):
                 if robust:
                     dir_name += "_robust"
                 dir_path = os.path.join(dir, dir_name)
-                assert _check_data_exists(dir_path, full_result_names) or (not full_data and _check_data_exists(dir_path, partial_result_names))
+                assert _check_data_exists(dir_path, full_result_names) or (
+                    not full_data and _check_data_exists(dir_path, partial_result_names))
                 dirs.append(dir_path)
                 lbs.append([idx_k, idx_a, idx_p])
 
@@ -196,9 +204,10 @@ def grep_data_correct(dir, save_dir, robust, full_data):
 
     _concat_and_save(x_advs, deltas, labels, save_dir)
 
+
 def grep_setting(atk_dir, save_dir, setting_name, robust, full):
     print(f"Setting: {setting_name}")
-    for atk in gargs.ATTACKS:
+    for atk in gargs.ALL_ATTACKS:
         atk_name = run.get_attack_name(atk)
 
         grep_atk_dir = os.path.join(atk_dir, atk_name)
@@ -218,14 +227,15 @@ def grep_setting(atk_dir, save_dir, setting_name, robust, full):
         print(f"Grep from: '{grep_atk_dir}'")
         print(f"Grep to: '{grep_save_dir}'")
 
-        # try:
-        grep_data_correct(grep_atk_dir, grep_save_dir, robust=robust, full_data=full)
-        # except AssertionError as inst:
-        #     print(inst)
-        # except Exception as inst:
-        #     raise inst
-        # finally:
-        #     print(f"Successful grep to: {grep_save_dir}")
+        try:
+            grep_data_correct(grep_atk_dir, grep_save_dir,
+                              robust=robust, full_data=full)
+        except AssertionError as inst:
+            print(inst)
+        except Exception as inst:
+            raise inst
+        finally:
+            print(f"Successful grep to: {grep_save_dir}")
 
 
 def grep_data_settings(dataset, arch):
@@ -236,8 +246,13 @@ def grep_data_settings(dataset, arch):
     # grep_setting(atk_dir, save_dir, "robust", True, False)
     # grep_setting(atk_dir, save_dir, "robust_all", True, True)
 
+
 if __name__ == "__main__":
     dataset = "cifar10"
-    archs = ["resnet18", "vgg11", "vgg13", "resnet20s"]
+    archs = ['resnet9', "resnet18", "vgg11", "vgg13", "resnet20s"]
     for arch in archs:
+        grep_data_settings(dataset, arch)
+    datasets = ["tinyimagenet"]
+    arch = 'resnet9'
+    for dataset in datasets:
         grep_data_settings(dataset, arch)

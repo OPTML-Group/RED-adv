@@ -36,6 +36,9 @@ def gen_commands_victim(dataset, arch, attacks, robust):
                         if r == 0.0 and s:
                             continue
                         command = f"python main_victim.py --kernel-size {k} --act-func {a} --pruning-ratio {r} --tensorboard"
+                        command += f" --dataset-dir {gargs.DATASET_DIRS[dataset]}"
+                        command += f" --num-classes {gargs.DATASET_NUM_CLASSES[dataset]}"
+                        command += f" --dataset {dataset}"
                         command += f" --save-dir {_model_dir}"
                         command += f" --arch {arch}"
                         if s:
@@ -153,15 +156,16 @@ def test_parsing_commands():
 
 
 if __name__ == "__main__":
-    debug = True
+    debug = False
 
     # call each code block seperatly
 
     # victim training
+    ext = f" --ffcv-dir {gargs.FFCV_FORMAT}"
+
     commands = train_victim_commands()
-    run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 5 if not debug else [0], commands, call=not debug,
-                 ext_command=" --dataset-dir /localscratch2/tmp/cifar{i}",
-                 suffix="commands1", shuffle=False, delay=1)
+    run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 3 if not debug else [0], commands, call=not debug,
+                 ext_command=ext, suffix="commands1", shuffle=False, delay=1)
     
     # need call grep_data.py before training parsing models
 
@@ -169,6 +173,7 @@ if __name__ == "__main__":
     # commands = train_parsing_commands()
     # run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 4 if not debug else [0], commands, call=not debug,
     #              suffix="commands2", shuffle=False, delay=1)
+
     # # parsing testing
     # commands = test_parsing_commands()
     # run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 8 if not debug else [0], commands, call=not debug,

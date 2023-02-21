@@ -14,10 +14,13 @@ def general_args(parser):
                         help='The directory used to save the trained models')
     parser.add_argument('--tensorboard', action='store_true',
                         help='Using tensorboard during training.')
-    parser.add_argument('--dataset', default="CIFAR10", type=str,
-                        help='dataset name, e.g., CIFAR10, CIFAR100, TinyImageNet')
+    parser.add_argument('--dataset', default="cifar10", type=str,
+                        choices=['cifar10', "tinyimagenet"],
+                        help='dataset name')
     parser.add_argument('--dataset-dir', type=str,
                         help='dataset dir')
+    parser.add_argument('--ffcv-dir', type=str, default=None,
+                        help='ffcv dir')
 
 
 def training_args(parser):
@@ -32,7 +35,7 @@ def training_args(parser):
                         help='number of total epochs to run')
     parser.add_argument('--save-freq', type=int,
                         default=15, help='num of epochs for saving checkpoint')
-    parser.add_argument('--num_classes', type=int, default=10)
+    parser.add_argument('--num-classes', type=int, default=10)
     parser.add_argument('--robust-train', action="store_true",
                         help="Robustive training")
     # parser.add_argument('--decreasing_lr', default='91,136',
@@ -72,7 +75,6 @@ def attack_args(parser):
     parser.add_argument('--n-queries', type=int, default=5000)
     parser.add_argument('--cw-c', type=int, default=1)
     parser.add_argument('--cw-kappa', type=float, default=0)
-    
 
 
 def parse_args_model_parsing():

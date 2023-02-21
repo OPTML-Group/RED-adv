@@ -4,7 +4,7 @@ KERNEL_SIZES = [3, 5, 7]
 ACTIVATION_FUNCTIONS = ["relu", "tanh", "elu"]
 PRUNING_RATIOS = [0.0, 0.375, 0.625]
 
-VALID_DATASETS = ["cifar10"]
+VALID_DATASETS = ["cifar10", "tinyimagenet"]
 VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']
 VALID_SETTINGS = ['origin', 'robust', 'robust_all']
 
