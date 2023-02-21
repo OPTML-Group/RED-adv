@@ -2,6 +2,7 @@ __pycache__
 tensorboard
 commands
 data
+results
 
 *.log
 *.pdf
@@ -15,3 +16,6 @@ data
 *.jpg
 *.sh
 *.info
+
+TinyImageNet/tiny-imagenet-200*
+!TinyImageNet/run.sh
