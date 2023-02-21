@@ -63,13 +63,12 @@ for dataset, arch in zip(datasets[1:], ['resnet9', 'resnet18']):
 # victim training
 commands = []
 for exp in gargs.EXPS:
-    if exp['setting'] not in 'origin robust':
-        continue
-    robust = 'robust' in exp['setting']
+    print(exp['data'], exp['arch'], exp['setting'], end=' ')
     
-    cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
-    
-    print(exp['data'], exp['arch'], exp['setting'], len(cmds), end=' ')
+    if not(exp['setting'] not in 'origin robust'):
+        robust = 'robust' in exp['setting']
+        cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
+        print(len(cmds), end=' ')
     cmds = run.gen_commands_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
     print(len(cmds), end=' ')
     cmds = run.gen_commands_eval_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])

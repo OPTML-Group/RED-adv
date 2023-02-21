@@ -126,7 +126,7 @@ def gen_commands_eval_parsing(dataset, arch, setting, attacks):
                     _parsing_dir, setting, model_atk_name, tp)
                 log_dir = os.path.join(_log_dir, setting)
                 command = f"python old_eval_parser.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
-                if os.path.exists(output_path) and os.path.exists(atk_path):
+                if os.path.exists(os.path.join(output_path, 'final.pt')) and os.path.exists(atk_path):
                     if not os.path.exists(os.path.join(log_dir, f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")):
                         commands.append(command)
     return commands
@@ -166,7 +166,7 @@ if __name__ == "__main__":
     ext = f" --ffcv-dir {gargs.FFCV_FORMAT}"
 
     commands = train_victim_commands()
-    run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 3 if not debug else [0], commands, call=not debug,
+    run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 1 if not debug else [0], commands, call=not debug,
                  ext_command=ext, suffix="commands1", shuffle=False, delay=1)
     
     # need call grep_data.py before training parsing models
@@ -178,5 +178,5 @@ if __name__ == "__main__":
 
     # # parsing testing
     # commands = test_parsing_commands()
-    # run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 8 if not debug else [0], commands, call=not debug,
+    # run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 5 if not debug else [0], commands, call=not debug,
     #              suffix="commands3", shuffle=False, delay=0.5)

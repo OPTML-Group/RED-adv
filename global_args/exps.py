@@ -33,6 +33,15 @@ def _get_exps():
             attacks=_atk.WHITEBOX_ATTACKS
         )
         exp_combs.append(s)
+    # robust ablation
+    for setting in settings[1:]:
+        s = dict(
+            arch=default_arch,
+            data=default_data,
+            setting=setting,
+            attacks=_atk.WHITEBOX_ATTACKS
+        )
+        exp_combs.append(s)
     # dataset ablation
     for data in datasets[1:]:
         if data == "tinyimagenet":
@@ -43,15 +52,6 @@ def _get_exps():
             arch=arch,
             data=data,
             setting=default_setting,
-            attacks=_atk.WHITEBOX_ATTACKS
-        )
-        exp_combs.append(s)
-    # robust ablation
-    for setting in settings[1:]:
-        s = dict(
-            arch=default_arch,
-            data=default_data,
-            setting=setting,
             attacks=_atk.WHITEBOX_ATTACKS
         )
         exp_combs.append(s)

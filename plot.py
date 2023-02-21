@@ -2,18 +2,37 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import os
+import shutil
 
 import global_args as gargs
 import run
 
 input_types = ["delta", "x_adv"]
-os.makedirs("figs", exist_ok=True)
-setting = "origin"
 
-def load_file(data_atk, model_atk, tp):
-    data_atk_name = run.get_attack_name(data_atk)
-    model_atk_name = run.get_attack_name(model_atk)
-    log_path = os.path.join("/localscratch2/ljcc/test_log/cifar10_resnet9", f"{setting}/data_{data_atk_name}___model_{model_atk_name}__{tp}.log")
+
+def check_group(group, atks):
+    return all(a in atks for a in group)
+
+
+def get_attack_display_name(atk):
+    dir_name = [atk['attack']]
+    if atk.get('norm') == 'L2':
+        dir_name.append('L2')
+
+    for key, val in atk.items():
+        if key not in ['attack', 'norm', 'alpha']:
+            dir_name.append(f"{key}={val}")
+    return ' '.join(dir_name)
+
+
+def load_file(exp, model_atk_name, data_atk_name, tp):
+    dataset = exp['data']
+    arch = exp['arch']
+    setting = exp['setting']
+    data_arch = f"{dataset}_{arch}"
+    log_path = os.path.join(gargs.PARSING_LOG_DIR, data_arch, setting,
+                            f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")
+
     if os.path.exists(log_path):
         with open(log_path, 'r') as fin:
             a = []
@@ -22,59 +41,61 @@ def load_file(data_atk, model_atk, tp):
         return a
     return [0, 0, 0]
 
-def plot_all():
-    for tp in input_types:
-        n_dim = len(gargs.ATTACKS)
-        a = np.zeros([3, n_dim, n_dim])
-        for idx, model_atk in enumerate(gargs.ATTACKS):
-            for idy, data_atk in enumerate(gargs.ATTACKS):
-                a[:, idx, idy] = load_file(data_atk, model_atk, tp)
-        for i in range(3):
-            plt.clf()
-            sns.heatmap(a[i])
-            plt.savefig(f"figs/full_{i}_{tp}.png")
-keys = ['pgd', 'pgdl2', 'fgsm', 'square', 'autoattack', 'cw', 'zosignsgd']
-rg = {
-    "full": list(range(0, len(gargs.ATTACKS)))
-}
-for key in keys:
-    rg[key] = []
-    for i, item in enumerate(gargs.ATTACKS):
-        if item['attack'] == key:
-            rg[key].append(i)
-def plot_all():
-    for tp in input_types:
-        n_dim = len(gargs.ATTACKS)
-        a = np.zeros([3, n_dim, n_dim])
-        for idx, model_atk in enumerate(gargs.ATTACKS):
-            for idy, data_atk in enumerate(gargs.ATTACKS):
-                a[:, idx, idy] = load_file(data_atk, model_atk, tp)
-        for i in range(3):
-            plt.clf()
-            sns.heatmap(a[i])
-            plt.savefig(f"figs/full_{i}_{tp}.png")
 
-def plot_range(lis, prefix="",annot=False):
-    n_dim = len(lis)
+def plot_range(attacks, exp, prefix="", annot=False):
+    dataset = exp['data']
+    arch = exp['arch']
+    setting = exp['setting']
+
+    data_arch = f"{dataset}_{arch}"
+
+    attack_names = [run.get_attack_name(atk) for atk in attacks]
+    display_names = [get_attack_display_name(atk) for atk in attacks]
+    for atk in attacks:
+        name = atk['attack']
+        if atk.get('norm') == 'L2':
+            name += '_L2'
+
+    plt.rcParams["font.family"] = "DeJavu Serif"
+    plt.rcParams["font.serif"] = ["Times New Roman"]
+
+    n_dim = len(attacks)
     for tp in input_types:
         a = np.zeros([4, n_dim, n_dim])
-        for idx, i in enumerate(lis):
-            for idy, j in enumerate(lis):
-                model_atk = gargs.ATTACKS[i]
-                data_atk = gargs.ATTACKS[j]
-                a[:3, idx, idy] = load_file(data_atk, model_atk, tp)
+
+        for idx, model_atk_name in enumerate(attack_names):
+            for idy, data_atk_name in enumerate(attack_names):
+                a[:3, idx, idy] = load_file(
+                    exp, model_atk_name, data_atk_name, tp)
+
         a[3] = np.mean(a[:3], axis=0)
+
         for i in range(4):
-            dir = f"figs/{setting}/{tp}_{i}"
-            os.makedirs(dir,exist_ok=True)
+            dir = os.path.join('figs', data_arch, setting, f"{tp}_{i}")
+            os.makedirs(dir, exist_ok=True)
             plt.clf()
-            sns.heatmap(a[i], annot=annot, fmt=".2f", linewidths=0.5 * annot)
-            plt.savefig(os.path.join(dir, f"{prefix}_{i}.png"))
-            
+            heatmap = sns.heatmap(a[i], annot=annot, fmt=".2f",
+                                  linewidths=0.5 * annot, cmap="vlag",
+                                  xticklabels=display_names, yticklabels=display_names)
+            if prefix == "all":
+                heatmap.set_yticklabels(heatmap.get_yticklabels(), fontsize = 5)
+                heatmap.set_xticklabels(heatmap.get_xticklabels(), fontsize = 5)
+            plt.xticks(rotation=45, ha='right')
+            plt.savefig(os.path.join(
+                dir, f"{prefix}_{i}.png"), bbox_inches='tight', dpi=300)
+
 
 if __name__ == "__main__":
-    import shutil
-    # if True:
-    #     shutil.rmtree("figs", ignore_errors=True)
-    for key, item in rg.items():
-        plot_range(item, key, annot=key!="full")
+    shutil.rmtree("figs", ignore_errors=True)
+
+    for exp in gargs.EXPS:
+        plot_range(exp['attacks'], exp, prefix="all", annot=False)
+
+        for group in gargs.ALL_GROUP:
+            atks = exp['attacks']
+            if check_group(group, atks):
+                name = group[0]['attack']
+                if group[0].get('norm') == 'L2':
+                    name += '_L2'
+                print(name)
+                plot_range(group, exp, prefix=name, annot=True)
