@@ -137,17 +137,8 @@ def get_attack(model, name, args):
 
 
 def get_attack_normalized(model, name, args):
-    CIFAR_MEAN_1 = [125.307/255, 122.961/255, 113.8575/255]
-    CIFAR_STD_1 = [51.5865/255, 50.847/255, 51.255/255]
-    TINYIMAGENET_MEAN_1 = [x * 255 for x in [0.4802, 0.4481, 0.3975]]
-    TinyImageNet_STD_1 = [x * 255 for x in [0.2302, 0.2265, 0.2262]]
-
     atk = get_attack(model, name, args)
-    if args.dataset in ["cifar10", "cifar100"]:
-        atk.set_normalization_used(mean=CIFAR_MEAN_1, std=CIFAR_STD_1)
-    elif args.dataset == 'tinyimagenet':
-        atk.set_normalization_used(mean=TINYIMAGENET_MEAN_1, std=TinyImageNet_STD_1)
-    else:
-        pass
+    atk.set_normalization_used(
+        mean=gargs.DATASET_MEAN[args.dataset], std=gargs.DATASET_STD[args.dataset])
 
     return atk
