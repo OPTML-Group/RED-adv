@@ -12,6 +12,8 @@ from ffcv.transforms import RandomHorizontalFlip, Cutout, \
 from ffcv.transforms.common import Squeeze
 from ffcv.writer import DatasetWriter
 
+import global_args as gargs
+
 import os
 
 
@@ -30,8 +32,8 @@ def CIFAR10(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
         writer.from_indexed_dataset(ds)
 
     # Note that statistics are wrt to uin8 range, [0,255].
-    CIFAR_MEAN = [125.307, 122.961, 113.8575]
-    CIFAR_STD = [51.5865, 50.847, 51.255]
+    dataset_mean = [x * 255 for x in gargs.DATASET_MEAN['cifar10']]
+    dataset_std = [x * 255 for x in gargs.DATASET_STD['cifar10']]
     BATCH_SIZE = batch_size
 
     loaders = {}
@@ -46,7 +48,7 @@ def CIFAR10(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
                 RandomHorizontalFlip(),
                 RandomTranslate(padding=2),
                 # Note Cutout is done before normalization.
-                Cutout(8, tuple(map(int, CIFAR_MEAN))),
+                Cutout(8, tuple(map(int, dataset_mean))),
             ])
         image_pipeline.extend([
             ToTensor(),
@@ -54,7 +56,7 @@ def CIFAR10(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
             ToTorchImage(),
             Convert(torch.float16),
             torchvision.transforms.Normalize(
-                CIFAR_MEAN, CIFAR_STD),  # type: ignore
+                dataset_mean, dataset_std),  # type: ignore
         ])
 
         # Create loaders
@@ -84,8 +86,8 @@ def CIFAR100(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
         writer.from_indexed_dataset(ds)
 
     # Note that statistics are wrt to uin8 range, [0,255].
-    CIFAR_MEAN = [125.307, 122.961, 113.8575]
-    CIFAR_STD = [51.5865, 50.847, 51.255]
+    dataset_mean = [x * 255 for x in gargs.DATASET_MEAN['cifar100']]
+    dataset_std = [x * 255 for x in gargs.DATASET_STD['cifar100']]
     BATCH_SIZE = batch_size
 
     loaders = {}
@@ -100,7 +102,7 @@ def CIFAR100(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
                 RandomHorizontalFlip(),
                 RandomTranslate(padding=2),
                 # Note Cutout is done before normalization.
-                Cutout(8, tuple(map(int, CIFAR_MEAN))),
+                Cutout(8, tuple(map(int, dataset_mean))),
             ])
         image_pipeline.extend([
             ToTensor(),
@@ -108,7 +110,7 @@ def CIFAR100(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
             ToTorchImage(),
             Convert(torch.float16),
             torchvision.transforms.Normalize(
-                CIFAR_MEAN, CIFAR_STD),  # type: ignore
+                dataset_mean, dataset_std),  # type: ignore
         ])
 
         # Create loaders
@@ -139,8 +141,8 @@ def TinyImageNet(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
         writer.from_indexed_dataset(ds)
 
     # Note that statistics are wrt to uin8 range, [0,255].
-    TinyImageNet_MEAN = [x * 255 for x in [0.4802, 0.4481, 0.3975]]
-    TinyImageNet_STD = [x * 255 for x in [0.2302, 0.2265, 0.2262]]
+    dataset_mean = [x * 255 for x in gargs.DATASET_MEAN['tinyimagenet']]
+    dataset_std = [x * 255 for x in gargs.DATASET_STD['tinyimagenet']]
     BATCH_SIZE = batch_size
 
     loaders = {}
@@ -155,7 +157,7 @@ def TinyImageNet(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
                 RandomHorizontalFlip(),
                 RandomTranslate(padding=2),
                 # Note Cutout is done before normalization.
-                Cutout(8, tuple(map(int, TinyImageNet_MEAN))),
+                Cutout(8, tuple(map(int, dataset_mean))),
             ])
         image_pipeline.extend([
             ToTensor(),
@@ -163,7 +165,7 @@ def TinyImageNet(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
             ToTorchImage(),
             Convert(torch.float16),
             torchvision.transforms.Normalize(
-                TinyImageNet_MEAN, TinyImageNet_STD),  # type: ignore
+                dataset_mean, dataset_std),  # type: ignore
         ])
 
         # Create loaders
