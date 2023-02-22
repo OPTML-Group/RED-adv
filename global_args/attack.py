@@ -6,6 +6,12 @@ PGD_ATTACKS = [
     {'attack': 'pgd', "eps": 12, "alpha": 2},
     {'attack': 'pgd', "eps": 16, "alpha": 2},
 ]
+PGD_L2_ATTACKS = [
+    {'attack': 'pgdl2', "eps": 0.25, "alpha": 0.05},
+    {'attack': 'pgdl2', "eps": 0.5, "alpha": 0.1},
+    {'attack': 'pgdl2', "eps": 0.75, "alpha": 0.15},
+    {'attack': 'pgdl2', "eps": 1.0, "alpha": 0.2},
+]
 FGSM_ATTACKS = [
     {'attack': 'fgsm', "eps": 4},
     {'attack': 'fgsm', "eps": 8},
@@ -65,9 +71,10 @@ NES_ATTACKS = [
     {'attack': 'nes', 'eps': 12, 'norm': 'Linf'},
     {'attack': 'nes', 'eps': 16, 'norm': 'Linf'},
 ]
-WHITEBOX_GROUP = [PGD_ATTACKS, FGSM_ATTACKS, CW_ATTACKS]
+WHITEBOX_GROUP = [PGD_ATTACKS, PGD_L2_ATTACKS, FGSM_ATTACKS, CW_ATTACKS]
 ENSEMBLE_GROUP = [AUTO_LINF_ATTACKS, AUTO_L2_ATTACKS]
-BLACKBOX_GROUP = [SQUARE_LINF_ATTACKS, SQUARE_L2_ATTACKS, ZOSIGNSGD_ATTACKS, ZOSGD_ATTACKS, NES_ATTACKS]
+BLACKBOX_GROUP = [SQUARE_LINF_ATTACKS, SQUARE_L2_ATTACKS,
+                  ZOSIGNSGD_ATTACKS, ZOSGD_ATTACKS, NES_ATTACKS]
 ALL_GROUP = WHITEBOX_GROUP + ENSEMBLE_GROUP + BLACKBOX_GROUP
 
 WHITEBOX_ATTACKS = list(itertools.chain(*WHITEBOX_GROUP))
