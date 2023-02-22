@@ -142,3 +142,4 @@ def get_attack_normalized(model, name, args):
         mean=gargs.DATASET_MEAN[args.dataset], std=gargs.DATASET_STD[args.dataset])
 
     return atk
+    
