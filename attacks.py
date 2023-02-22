@@ -6,6 +6,7 @@ import torch
 
 import torchattack.torchattacks as atk
 import impl_atk
+import global_args as gargs
 
 
 def generate_attack_images(model, loader, atk, save_dir=None):
@@ -13,7 +14,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     # path_delta = os.path.join(save_dir, "delta.pt")
     path_delta_all = os.path.join(save_dir, "delta_all.pt")
     path_adv_all = os.path.join(save_dir, "adv_all.pt")
-    
+
     path_ori_pred = os.path.join(save_dir, "ori_pred.pt")
     path_adv_pred = os.path.join(save_dir, "adv_pred.pt")
     path_target = os.path.join(save_dir, "targets.pt")
@@ -22,7 +23,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     # if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_target) and os.path.exists(path_acc):
     #     return torch.load(path_x_adv), torch.load(path_delta), torch.load(path_target)
     if os.path.exists(path_target) and os.path.exists(path_delta_all) and os.path.exists(path_adv_all) and os.path.exists(path_adv_pred) and os.path.exists(path_ori_pred) and os.path.exists(path_acc):
-        return 
+        return
     shutil.rmtree(save_dir, ignore_errors=True)
 
     # x_advs, deltas,  = [], []
@@ -87,15 +88,16 @@ def generate_attack_images(model, loader, atk, save_dir=None):
         torch.save(targets, path_target)
         torch.save(adv_preds, path_adv_pred)
         torch.save(ori_preds, path_ori_pred)
-    
+
         with open(path_acc, 'w') as fout:
-            print("n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout)
+            print("n_corr_succ: {}".format(
+                n_correct_success / n_datas * 100), file=fout)
             print("n_succ: {}".format(n_success / n_datas * 100), file=fout)
-    
+
     print("n_corr_succ: {}".format(n_correct_success / n_datas * 100))
     print("n_succ: {}".format(n_success / n_datas * 100))
     # return x_advs, deltas, targets
-    
+
 
 def get_attack(model, name, args):
     if name == "pgd":

@@ -39,7 +39,7 @@ def load_file(exp, model_atk_name, data_atk_name, tp):
             for line in fin:
                 a.append(float(line[:-1]))
         return a
-    return [0, 0, 0]
+    return [33, 33, 20]
 
 
 def plot_range(attacks, exp, prefix="", annot=False):
@@ -77,25 +77,28 @@ def plot_range(attacks, exp, prefix="", annot=False):
             heatmap = sns.heatmap(a[i], annot=annot, fmt=".2f",
                                   linewidths=0.5 * annot, cmap="vlag",
                                   xticklabels=display_names, yticklabels=display_names)
-            if prefix == "all":
+            if prefix in ["all", "blackbox", "whitebox"]:
                 heatmap.set_yticklabels(heatmap.get_yticklabels(), fontsize = 5)
                 heatmap.set_xticklabels(heatmap.get_xticklabels(), fontsize = 5)
             plt.xticks(rotation=45, ha='right')
             plt.savefig(os.path.join(
                 dir, f"{prefix}_{i}.png"), bbox_inches='tight', dpi=300)
 
+def draw_plot(group, exp, name):
+    atks = exp['attacks']
+    if check_group(group, atks):
+        if group[0].get('norm') == 'L2':
+            name += '_L2'
+        print(name)
+        plot_range(group, exp, prefix=name, annot=True)
 
 if __name__ == "__main__":
     shutil.rmtree("figs", ignore_errors=True)
 
     for exp in gargs.EXPS:
-        plot_range(exp['attacks'], exp, prefix="all", annot=False)
-
+        draw_plot(gargs.ALL_ATTACKS, exp, "all")
+        draw_plot(gargs.BLACKBOX_ATTACKS, exp, "blackbox")
+        draw_plot(gargs.WHITEBOX_ATTACKS, exp, "whitebox")
         for group in gargs.ALL_GROUP:
-            atks = exp['attacks']
-            if check_group(group, atks):
-                name = group[0]['attack']
-                if group[0].get('norm') == 'L2':
-                    name += '_L2'
-                print(name)
-                plot_range(group, exp, prefix=name, annot=True)
+            name = group[0]['attack']
+            draw_plot(group, exp, name)

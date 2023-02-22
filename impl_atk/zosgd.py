@@ -48,11 +48,12 @@ def _zosgd(X, y, model, steps=500, eta=0.0005, eps=8/255,
             if sign:
                 X_adv = X_adv.detach() + eta * gs_t.sign()
             else:
-                gs_t = gs_t / gs_t.norm(dim=[1, 2, 3], p=2, keepdim=True)
+                gs_t = gs_t / (gs_t.norm(dim=[1, 2, 3], p=2, keepdim=True) + 1e-15)
                 gs_t *= (3 * 32 * 32) ** 0.5
                 X_adv = X_adv.detach() + eta * gs_t
             delta = torch.clamp(X_adv - X, min=-eps, max=eps)
             X_adv = torch.clamp(X + delta, min=0, max=1).detach()
+            assert not X_adv.isnan().any()
 
             # adv_out = model((X_adv - mean)/std)
             # clean_out = model((X - mean)/std)
