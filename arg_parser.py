@@ -15,7 +15,7 @@ def general_args(parser):
     parser.add_argument('--tensorboard', action='store_true',
                         help='Using tensorboard during training.')
     parser.add_argument('--dataset', default="cifar10", type=str,
-                        choices=['cifar10', "cifar100", "tinyimagenet"],
+                        choices=['cifar10', "cifar100", "tinyimagenet", "mnist"],
                         help='dataset name')
     parser.add_argument('--dataset-dir', type=str,
                         help='dataset dir')
@@ -68,8 +68,8 @@ def attack_args(parser):
                         choices=["pgd", "pgdl2", "fgsm", "cw", "square", "autoattack", "zosignsgd", "zosgd", "nes"])
     parser.add_argument('--attack-save-dir', type=str, default="attack_img")
     parser.add_argument('--steps', type=int, default=10)
-    parser.add_argument('--eps', type=float, default=8/255)
-    parser.add_argument('--alpha', type=float, default=1/255)
+    parser.add_argument('--eps', type=float, default=8)
+    parser.add_argument('--alpha', type=float, default=1)
     parser.add_argument('--norm', type=str, default="Linf",
                         choices=["Linf", "L2"])
     parser.add_argument('--n-queries', type=int, default=5000)
