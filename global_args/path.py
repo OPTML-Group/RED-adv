@@ -8,6 +8,7 @@ DATASET_DIRS = {
     "tinyimagenet": "/localscratch/tmp/tiny-imagenet-200",
     "cifar10": "/localscratch/tmp/cifar10",
     "cifar100": "/localscratch/tmp/cifar100",
+    "mnist": "/localscratch/tmp/mnist",
 }
 
 
