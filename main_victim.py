@@ -20,6 +20,9 @@ def main():
     elif args.dataset == 'tinyimagenet':
         loader = datasets.TinyImageNet(
             dir=args.dataset_dir, ffcv_dir=args.ffcv_dir, batch_size=args.batch_size)
+    elif args.dataset == 'mnist':
+        loader = datasets.MNIST(
+            dir=args.dataset_dir, batch_size=args.batch_size)
     else:
         raise NotImplementedError(f"Dataset {args.dataset} not implemented!")
     model = models.get_model(args.arch, args)

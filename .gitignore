@@ -3,6 +3,7 @@ tensorboard
 commands
 data
 results
+attack_img
 
 *.log
 *.pdf

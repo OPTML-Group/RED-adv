@@ -33,8 +33,8 @@ def generate_attack_images(model, loader, atk, save_dir=None):
 
     model.eval()
     for image, target in tqdm.tqdm(loader['test']):
-        image = image.float()
-        target = target.long()
+        image = image.float().cuda()
+        target = target.long().cuda()
 
         image_adv = atk(image, target).detach()
 
@@ -142,3 +142,4 @@ def get_attack_normalized(model, name, args):
         mean=gargs.DATASET_MEAN[args.dataset], std=gargs.DATASET_STD[args.dataset])
 
     return atk
+    

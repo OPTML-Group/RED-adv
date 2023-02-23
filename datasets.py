@@ -2,6 +2,7 @@ from typing import List
 
 import torch
 import torchvision
+from torchvision import transforms
 
 from ffcv.fields import IntField, RGBImageField
 from ffcv.fields.decoders import IntDecoder, SimpleRGBImageDecoder
@@ -177,4 +178,16 @@ def TinyImageNet(dir='/tmp', ffcv_dir='/tmp', batch_size=512):
                                drop_last=(name == 'train'),
                                pipelines={'image': image_pipeline,
                                           'label': label_pipeline})
+    return loaders
+
+def MNIST(dir='/tmp', batch_size=512):
+    datasets = {
+        'train': torchvision.datasets.MNIST(dir, train=True, download=True, transform=transforms.ToTensor()),
+        'test': torchvision.datasets.MNIST(dir, train=False, download=True, transform=transforms.ToTensor())
+    }
+    
+    loaders = {}
+    for name in ['train', 'test']:
+        # Create loaders
+        loaders[name] = torch.utils.data.DataLoader(datasets[name], batch_size = batch_size)
     return loaders

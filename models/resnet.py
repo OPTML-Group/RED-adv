@@ -150,7 +150,10 @@ class ResNet(nn.Module):
                 self.mod = nn.Tanh()
             elif args.act_func == 'elu':
                 self.mod = nn.ELU(inplace=True)
-            self.conv1 = conv(args, 3, self.inplanes, kernel_size=kernel_size, stride=1, padding=int((kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
+            if args.dataset == "mnist":
+                self.conv1 = conv(args, 1, self.inplanes, kernel_size=kernel_size, stride=1, padding=int((kernel_size-1)/2))
+            else:
+                self.conv1 = conv(args, 3, self.inplanes, kernel_size=kernel_size, stride=1, padding=int((kernel_size-1)/2)) # if ks = 3 then padding = 1; if ks = 1 then padding = 0; if ks = 5 then padding = 2
             # self.conv1 = nn.Conv2d(3, self.inplanes, kernel_size=3, stride=1, padding=1, bias=False)
             self.bn1 = norm_layer(self.inplanes)
             # self.relu = nn.ReLU(inplace=True)
