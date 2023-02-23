@@ -10,6 +10,7 @@ import global_args as gargs
 def get_models(dataset, arch, robust=True, omp=2):
     _data_arch_name = f"{dataset}_{arch}"
     _model_dir = os.path.join(gargs.MODEL_DIR, _data_arch_name)
+    last_epoch = 100 if dataset == "tinyimagenet" else 75
 
     cnt = 0
     for k in run.kernels:
@@ -24,7 +25,7 @@ def get_models(dataset, arch, robust=True, omp=2):
                         model_name += "_struct"
                     if robust:
                         model_name += '_robust'
-                    path = os.path.join(_model_dir, f"{model_name}_omp_{omp}/checkpoint_75.pt")
+                    path = os.path.join(_model_dir, f"{model_name}_omp_{omp}/checkpoint_{last_epoch}.pt")
                     # print(path)
 
                     if not os.path.exists(path):
@@ -69,7 +70,12 @@ for exp in gargs.EXPS:
         robust = 'robust' in exp['setting']
         cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
         print(len(cmds), end=' ')
-    cmds = run.gen_commands_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
+    cmds = run.gen_commands_parsing(exp)
     print(len(cmds), end=' ')
-    cmds = run.gen_commands_eval_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
+    cmds = run.gen_commands_eval_parsing(exp)
     print(len(cmds))
+for exp1 in gargs.EXPS:
+    for exp2 in gargs.EXPS:
+        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2)
+        print(len(cmds), end='\t')
+    print()
