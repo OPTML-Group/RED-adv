@@ -14,7 +14,7 @@ def general_args(parser):
                         help='The directory used to save the trained models')
     parser.add_argument('--tensorboard', action='store_true',
                         help='Using tensorboard during training.')
-    parser.add_argument('--dataset', default="cifar10", type=str,
+    parser.add_argument('--dataset', default="mnist", type=str,
                         choices=['cifar10', "cifar100", "tinyimagenet", "mnist"],
                         help='dataset name')
     parser.add_argument('--dataset-dir', type=str,
@@ -55,12 +55,16 @@ def pruning_args(parser):
 
 
 def model_args(parser):
-    parser.add_argument('--arch', type=str, default="resnet9",
-                        choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11', 'vgg13'])
+    parser.add_argument('--arch', type=str, default="lenet",
+                        choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11', 'vgg13', 'lenet'])
     parser.add_argument('--act-func', type=str, default="relu",
                         choices=["relu", "tanh", "elu"])
     parser.add_argument('--kernel-size', type=int,
-                        default=3, choices=[3, 5, 7])
+                        default=3, choices=[1, 3, 5, 7]) # ks can be chosen from 1,3,5 for mnist and 3,5,7 for others. 
+    parser.add_argument('--num_conv', type=int,
+                        default=3, choices=[1, 3, 5]) # num_conv can be set for mnist
+    parser.add_argument('--num_fc', type=int,
+                        default=2, choices=[2, 3, 4]) # num_fc can be set for mnist
 
 
 def attack_args(parser):

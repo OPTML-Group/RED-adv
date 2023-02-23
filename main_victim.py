@@ -28,8 +28,12 @@ def main():
     model = models.get_model(args.arch, args)
     model = model.cuda()
 
-    prefix = "seed{}_kernel{}_act{}_prune{}_".format(
-        args.seed, args.kernel_size, args.act_func, args.pruning_ratio)
+    if args.dataset == 'mnist':
+        prefix = "seed{}_kernel{}_act{}_prune{}_".format(
+            args.seed, args.kernel_size, args.act_func, args.pruning_ratio)
+    else:
+        prefix = "seed{}_conv{}_fc{}_kernel{}_act{}_prune{}_".format(
+            args.seed, args.num_conv, args.num_fc, args.kernel_size, args.act_func, args.pruning_ratio)
     if args.structured_pruning:
         prefix += "struct_"
     if args.robust_train:
