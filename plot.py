@@ -61,7 +61,7 @@ def load_exp(exp_model, exp_data, attacks):
     _log_dir = os.path.join(f"{dataset}_{arch_model}" if arch_model == arch_data else f"{dataset}_model_{arch_model}_data_{arch_data}",
                             setting_model if setting_model == setting_data else f"model_{setting_model}_data_{setting_data}")
 
-    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, _log_dir)
+    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, "attrnet", _log_dir)
 
     n_dim = len(attacks)
     attack_names = [run.get_attack_name(atk) for atk in attacks]
