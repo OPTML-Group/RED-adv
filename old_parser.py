@@ -3,13 +3,14 @@ from torch.utils.data import Dataset, DataLoader
 
 import torch as ch
 from torch.cuda.amp import autocast 
-import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from tqdm import tqdm
 import argparse
 import os
+import attr_models
+import global_args as gargs
 
 parser = argparse.ArgumentParser(description='train clf')
 
@@ -23,6 +24,8 @@ parser.add_argument('--dataset', type=str, default='cifar10')
 parser.add_argument('--attack', type=str, default='PGD_eps8_alpha1_steps10')
 parser.add_argument('--input-type', type=str, default='delta')
 parser.add_argument('--save_folder', type=str)
+parser.add_argument('--attr-arch', type=str, choices=gargs.VALID_ATTR_ARCHS)
+
 
 args = parser.parse_args()
 
@@ -68,64 +71,41 @@ train_dl = DataLoader(train_dataset, batch_size=args.batch_size)
 test_dl = DataLoader(test_dataset, batch_size=args.batch_size)
 
 
-class AttrNet(ch.nn.Module):
-    def __init__(self, num_channel=3, num_class=5, num_output=3):
-        super(AttrNet, self).__init__()
-        self.conv1 = ch.nn.Conv2d(num_channel, 32, 3, 1)
-        self.conv2 = ch.nn.Conv2d(32, 64, 3, 1)
-        # self.bn1 = ch.nn.BatchNorm2d(3)
-        # self.bn2 = ch.nn.BatchNorm2d(32)
-        # self.bn3 = ch.nn.BatchNorm2d(64)
-        self.dropout1 = ch.nn.Dropout(0.25)
-        self.dropout2 = ch.nn.Dropout(0.25)
-        self.fc1 = ch.nn.Linear(12544, 256)
-        self.fc2 = ch.nn.Linear(256, num_class * num_output)
-        self.num_class = num_class
-        self.num_output = num_output
-
-    def forward(self, x):
-        # x = self.bn1(x)
-        x = self.conv1(x)
-        # x = self.bn2(x)
-        x = F.relu(x)
-        x = self.conv2(x)
-        # x = self.bn3(x)
-        x = F.relu(x)
-        x = F.max_pool2d(x, 2)
-        x = self.dropout1(x)
-        x = ch.flatten(x, 1)
-        x = self.fc1(x)
-        x = F.relu(x)
-        x = self.dropout2(x)
-        x = self.fc2(x)
-        outputs = x.view([-1, self.num_class, self.num_output])
-        return outputs
 
 
 use_cuda = ch.cuda.is_available()
 device = ch.device("cuda" if use_cuda else "cpu")
 
-attr_model = AttrNet().to(device)
-optimizer = optim.SGD(attr_model.parameters(), lr=args.lr)
+dataset = args.dataset
+
+model = attr_models.get_model(
+    args.attr_arch,
+    num_channel=gargs.DATASET_NUM_CHANNEL[dataset],
+    num_class=5,
+    num_output=3,
+    img_size=gargs.DATASET_INPUT_SIZE[dataset]
+).to(device)
+
+optimizer = optim.SGD(model.parameters(), lr=args.lr)
 scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
 criterion = ch.nn.CrossEntropyLoss()
 
-attr_model.cuda()
-attr_model.train()
+model.cuda()
+model.train()
 
 os.makedirs(args.save_folder, exist_ok=True)
 
 fout = open(os.path.join(args.save_folder, "output.log"), 'w')
 
 for i in range(args.epochs):
-    attr_model.train()
+    model.train()
     correct_train = ch.zeros([3]).cuda()
     for x,  y in tqdm(train_dl):
         with autocast():
             assert not x.max().isnan().any()
             x = x.cuda()
             y = y.cuda().long()
-            outputs = attr_model(x)
+            outputs = model(x)
             correct_train = correct_train + (outputs.argmax(-2) == y).sum(0)
             loss = criterion(outputs, y)
             loss.backward()
@@ -142,14 +122,14 @@ for i in range(args.epochs):
 
 
     scheduler.step()
-    attr_model.eval()
+    model.eval()
     correct_test = ch.zeros([3]).cuda()
     for x,  y in tqdm(test_dl):
         with autocast():
             assert not x.max().isnan().any()
             x = x.cuda()
             y = y.cuda().long()
-            outputs = attr_model(x)
+            outputs = model(x)
             correct_test = correct_test + (outputs.argmax(-2) == y).sum(0)
 
     print(f"Test acc:{correct_test/test_size*100}")
@@ -157,5 +137,5 @@ for i in range(args.epochs):
     print(f"Test acc:{correct_test/test_size*100}", file = fout)
     print(f"Test loss: {loss.item()}", file = fout)
 
-ch.save(attr_model.state_dict(), os.path.join(args.save_folder, "final.pt"))
+ch.save(model.state_dict(), os.path.join(args.save_folder, "final.pt"))
 # save path

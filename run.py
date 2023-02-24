@@ -76,7 +76,7 @@ def gen_commands_victim(dataset, arch, attacks, robust):
     return commands
 
 
-def gen_commands_parsing(exp):
+def gen_commands_parsing(exp, attr_arch):
     dataset=exp['data']
     arch=exp['arch']
     setting=exp['setting']
@@ -85,9 +85,9 @@ def gen_commands_parsing(exp):
 
     _atk_dir = os.path.join(gargs.ATK_DIR, _data_arch_name)
     _model_dir = os.path.join(gargs.MODEL_DIR, _data_arch_name)
-    _parsing_dir = os.path.join(gargs.PARSING_DIR, _data_arch_name)
+    _parsing_dir = os.path.join(gargs.PARSING_DIR, attr_arch, _data_arch_name)
     _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_name)
-    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, _data_arch_name)
+    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _data_arch_name)
 
     input_types = ["delta", "x_adv"]
 
@@ -104,11 +104,13 @@ def gen_commands_parsing(exp):
 
             if not os.path.exists(os.path.join(output_path, "final.pt")):
                 command = f"python old_parser.py --input_folder {grep_path} --input-type {tp} --save_folder {output_path}"
+                command += f" --attr-arch {attr_arch}"
+                command += f" --dataset {dataset}"
                 commands.append(command)
     return commands
 
 
-def gen_commands_eval_parsing_cross(exp_model, exp_data):
+def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
     if exp_model['data'] != exp_data['data']:
         return []
     if exp_model['arch'] != exp_data['arch'] and exp_model['setting'] != exp_data['setting']:
@@ -127,9 +129,9 @@ def gen_commands_eval_parsing_cross(exp_model, exp_data):
     _log_dir = os.path.join(f"{dataset}_{arch_model}" if arch_model == arch_data else f"{dataset}_model_{arch_model}_data_{arch_data}", 
                             setting_model if setting_model == setting_data else f"model_{setting_model}_data_{setting_data}")
 
-    _parsing_dir = os.path.join(gargs.PARSING_DIR, _data_arch_model)
+    _parsing_dir = os.path.join(gargs.PARSING_DIR, attr_arch, _data_arch_model)
     _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_data)
-    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, _log_dir)
+    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _log_dir)
 
     input_types = ["delta", "x_adv"]
 
@@ -143,14 +145,18 @@ def gen_commands_eval_parsing_cross(exp_model, exp_data):
                 output_path = os.path.join(
                     _parsing_dir, model_atk_name, tp)
                 log_dir = os.path.join(_log_dir)
+
                 command = f"python old_eval_parser.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
+                command += f" --attr-arch {attr_arch}"
+                command += f" --dataset {dataset}"
+
                 if os.path.exists(os.path.join(output_path, 'final.pt')) and os.path.exists(atk_path):
                     if not os.path.exists(os.path.join(log_dir, f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")):
                         commands.append(command)
     return commands
 
 
-def gen_commands_eval_parsing(exp):
+def gen_commands_eval_parsing(exp, attr_arch):
     # dataset=exp['data']
     # arch=exp['arch']
     # setting=exp['setting']
@@ -179,7 +185,7 @@ def gen_commands_eval_parsing(exp):
     #             if os.path.exists(os.path.join(output_path, 'final.pt')) and os.path.exists(atk_path):
     #                 if not os.path.exists(os.path.join(log_dir, f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")):
     #                     commands.append(command)
-    return gen_commands_eval_parsing_cross(exp, exp)
+    return gen_commands_eval_parsing_cross(exp, exp, attr_arch)
 
 
 def train_victim_commands():
@@ -195,27 +201,30 @@ def train_victim_commands():
     return commands
 
 
-def train_parsing_commands():
+def train_parsing_commands(attr_arch):
     commands = []
-    for exp in gargs.EXPS:
-        commands += gen_commands_parsing(exp)
+    if attr_arch != 'attrnet':
+        commands += gen_commands_parsing(gargs.EXPS[0], attr_arch)
+    else:
+        for exp in gargs.EXPS:
+            commands += gen_commands_parsing(exp, attr_arch)
     print(len(commands))
     return commands
 
 
-def test_parsing_commands():
+def test_parsing_commands(attr_arch):
     commands = []
     for exp in gargs.EXPS:
-        commands += gen_commands_eval_parsing(exp=exp)
+        commands += gen_commands_eval_parsing(exp=exp, attr_arch=attr_arch)
     print(len(commands))
     return commands
 
 
-def cross_test_parsing_commands():
+def cross_test_parsing_commands(attr_arch):
     commands = []
-    for exp1 in gargs.EXPS[:5]:
+    for exp1 in gargs.EXPS:
         for exp2 in gargs.EXPS:
-            commands += gen_commands_eval_parsing_cross(exp1, exp2)
+            commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch)
     # exp2 = gargs.EXPS[0]
     # for exp1 in gargs.EXPS[5:] + gargs.EXPS[1:2]:
     #     commands += gen_commands_eval_parsing_cross(exp1, exp2)
@@ -229,9 +238,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("train")
     parser.add_argument('--stage', type=int)
     parser.add_argument('--debug', action="store_true")
+    parser.add_argument('--thread', type=int)
     args = parser.parse_args()
     debug = args.debug
     stage = args.stage
+    th = args.thread
 
     # call each code block seperatly
 
@@ -240,21 +251,27 @@ if __name__ == "__main__":
         ext = f" --ffcv-dir {gargs.FFCV_FORMAT}"
 
         commands = train_victim_commands()
-        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 3 if not debug else [0], commands, call=not debug,
+        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
                     ext_command=ext, suffix="commands1", shuffle=False, delay=1)
     elif stage == 2:
         # parsing training
         # need call grep_data.py before training parsing models
-        commands = train_parsing_commands()
-        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 2 if not debug else [0], commands, call=not debug,
+        commands = []
+        for at_arch in gargs.VALID_ATTR_ARCHS:
+            commands += train_parsing_commands(attr_arch=at_arch)
+        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
                     suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
         # parsing testing
-        # commands = test_parsing_commands()
-        # run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 4 if not debug else [0], commands, call=not debug,
-        #              suffix="commands3", shuffle=False, delay=0.5)
+        commands = []
+        for at_arch in gargs.VALID_ATTR_ARCHS:
+            commands += test_parsing_commands(attr_arch=at_arch)
+        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
+                     suffix="commands3", shuffle=False, delay=4)
 
         # parsing cross testing
-        commands = cross_test_parsing_commands()
-        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 4 if not debug else [0], commands, call=not debug,
-                     suffix="commands3", shuffle=False, delay=4)
+        # commands = []
+        # for at_arch in gargs.VALID_ATTR_ARCHS:
+        #     commands += cross_test_parsing_commands(attr_arch=at_arch)
+        # run_commands([1, 2, 3, 4, 5, 6, 7, 0] * 4 if not debug else [0], commands, call=not debug,
+        #              suffix="commands3", shuffle=False, delay=4)

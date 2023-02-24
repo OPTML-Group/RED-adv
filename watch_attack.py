@@ -70,12 +70,16 @@ for exp in gargs.EXPS:
         robust = 'robust' in exp['setting']
         cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
         print(len(cmds), end=' ')
-    cmds = run.gen_commands_parsing(exp)
+    cmds = run.gen_commands_parsing(exp, attr_arch="attrnet")
     print(len(cmds), end=' ')
-    cmds = run.gen_commands_eval_parsing(exp)
+    cmds = run.gen_commands_eval_parsing(exp, attr_arch="attrnet")
     print(len(cmds))
 for exp1 in gargs.EXPS:
     for exp2 in gargs.EXPS:
-        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2)
+        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, attr_arch="attrnet")
         print(len(cmds), end='\t')
     print()
+for attr in gargs.VALID_ATTR_ARCHS:
+    cmds = run.gen_commands_parsing(gargs.EXPS[0], attr)
+    cmds2 = run.gen_commands_eval_parsing_cross(gargs.EXPS[0], gargs.EXPS[0], attr)
+    print(attr, len(cmds), len(cmds2), end=" ")
