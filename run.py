@@ -102,7 +102,7 @@ def gen_commands_parsing(exp, attr_arch):
                 continue
 
             if not os.path.exists(os.path.join(output_path, "final.pt")):
-                command = f"python old_parser.py --input_folder {grep_path} --input-type {tp} --save_folder {output_path}"
+                command = f"python main_parser.py --input_folder {grep_path} --input-type {tp} --save_folder {output_path}"
                 command += f" --attr-arch {attr_arch}"
                 command += f" --dataset {dataset}"
                 commands.append(command)
@@ -145,7 +145,7 @@ def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
                     _parsing_dir, model_atk_name, tp)
                 log_dir = os.path.join(_log_dir)
 
-                command = f"python old_eval_parser.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
+                command = f"python main_parser_eval.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
                 command += f" --attr-arch {attr_arch}"
                 command += f" --dataset {dataset}"
 
@@ -182,7 +182,7 @@ def gen_commands_eval_parsing(exp, attr_arch):
                 _parsing_dir, model_atk_name, tp)
             log_dir = os.path.join(_log_dir)
 
-            command = f"python old_eval_parser.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
+            command = f"python main_parser_eval.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
             command += f" --attr-arch {attr_arch}"
             command += f" --dataset {dataset}"
 
