@@ -13,10 +13,10 @@ def get_models(dataset, arch, robust=True, omp=2):
     last_epoch = 100 if dataset == "tinyimagenet" else 75
 
     cnt = 0
-    for k in run.kernels:
-        for a in run.acts:
-            for r in run.ratios:
-                for s in run.struct:
+    for k in run._kernels:
+        for a in run._acts:
+            for r in run._ratios:
+                for s in run._struct:
                     if r == 0.0 and s:
                         continue
                     model_name = "seed{}_kernel{}_act{}_prune{}".format(
@@ -70,10 +70,11 @@ for exp in gargs.EXPS:
         robust = 'robust' in exp['setting']
         cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
         print(len(cmds), end=' ')
-    cmds = run.gen_commands_parsing(exp, attr_arch="attrnet")
-    print(len(cmds), end=' ')
-    cmds = run.gen_commands_eval_parsing(exp, attr_arch="attrnet")
-    print(len(cmds))
+    for attr_arch in ['attrnet', 'conv4']:
+        cmds = run.gen_commands_parsing(exp, attr_arch=attr_arch)
+        cmds2 = run.gen_commands_eval_parsing(exp, attr_arch=attr_arch)
+        print(attr_arch, len(cmds), len(cmds2), end=' ')
+    print()
 for exp1 in gargs.EXPS:
     for exp2 in gargs.EXPS:
         cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, attr_arch="attrnet")
@@ -81,5 +82,11 @@ for exp1 in gargs.EXPS:
     print()
 for attr in gargs.VALID_ATTR_ARCHS:
     cmds = run.gen_commands_parsing(gargs.EXPS[0], attr)
-    cmds2 = run.gen_commands_eval_parsing_cross(gargs.EXPS[0], gargs.EXPS[0], attr)
+    cmds2 = run.gen_commands_eval_parsing(gargs.EXPS[0], attr)
     print(attr, len(cmds), len(cmds2), end=" ")
+cnt = 0
+for exp1 in gargs.EXPS[:5]:
+    for exp2 in gargs.EXPS[:5]:
+        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, "conv4")
+        cnt += len(cmds)
+print(cnt)

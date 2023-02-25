@@ -14,7 +14,7 @@ def check_group(group, atks):
     return all(a in atks for a in group)
 
 
-def get_attack_display_name(atk, exp_name = None):
+def get_attack_display_name(atk, exp_name=None):
     dir_name = []
 
     if exp_name is not None:
@@ -43,7 +43,7 @@ def load_file(log_dir, model_atk_name, data_atk_name, tp):
     return [33, 33, 20]
 
 
-def load_exp(exp_model, exp_data, attacks):
+def load_exp(exp_model, exp_data, attacks, attr_arch):
     if exp_model['data'] != exp_data['data']:
         raise Exception("Dataset mismatch! {} {}".format(
             exp_model['data'], exp_data['data']))
@@ -61,7 +61,7 @@ def load_exp(exp_model, exp_data, attacks):
     _log_dir = os.path.join(f"{dataset}_{arch_model}" if arch_model == arch_data else f"{dataset}_model_{arch_model}_data_{arch_data}",
                             setting_model if setting_model == setting_data else f"model_{setting_model}_data_{setting_data}")
 
-    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, "attrnet", _log_dir)
+    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _log_dir)
 
     n_dim = len(attacks)
     attack_names = [run.get_attack_name(atk) for atk in attacks]
@@ -81,7 +81,7 @@ def load_exp(exp_model, exp_data, attacks):
     return mats
 
 
-def plot_range(attacks, exp, prefix="", annot=False):
+def plot_range(attacks, exp, attr_arch, prefix="", annot=False):
     dataset = exp['data']
     arch = exp['arch']
     setting = exp['setting']
@@ -99,7 +99,7 @@ def plot_range(attacks, exp, prefix="", annot=False):
 
     name = ["Kernel Size", "Activation Function", "Pruning Ratio", "All"]
 
-    mats = load_exp(exp, exp, attacks)
+    mats = load_exp(exp, exp, attacks, attr_arch)
 
     for tp, a in mats.items():
         for i in range(4):
@@ -122,8 +122,10 @@ def plot_range(attacks, exp, prefix="", annot=False):
             plt.savefig(os.path.join(
                 dir, f"{prefix}_{i}.png"), bbox_inches='tight', dpi=300)
 
-def plot_huge(attacks, exps, exp_names, save_dir, prefix="", annot=False, title_suff="", scale=False, mask_same=False):
-    display_names = [get_attack_display_name(atk, exp) for exp in exp_names for atk in attacks]
+
+def plot_huge(attacks, exps, exp_names, attr_arch, save_dir, prefix="", annot=False, title_suff="", scale=False, mask_same=False):
+    display_names = [get_attack_display_name(
+        atk, exp) for exp in exp_names for atk in attacks]
     n_sq = len(attacks)
     n_exps = len(exps)
     for atk in attacks:
@@ -136,19 +138,22 @@ def plot_huge(attacks, exps, exp_names, save_dir, prefix="", annot=False, title_
 
     name = ["Kernel Size", "Activation Function", "Pruning Ratio", "All"]
 
-    mats = {tp: np.zeros([4, n_sq * n_exps, n_sq * n_exps]) for tp in input_types}
+    mats = {tp: np.zeros([4, n_sq * n_exps, n_sq * n_exps])
+            for tp in input_types}
 
     for idx_model, exp_model in enumerate(exps):
         for idx_data, exp_data in enumerate(exps):
             if mask_same and idx_model == idx_data:
-                exp_mat= {tp: np.zeros([4, n_sq, n_sq]) + np.array([33, 33, 20, 86 / 3])[:, None, None] for tp in input_types}
+                exp_mat = {tp: np.zeros(
+                    [4, n_sq, n_sq]) + np.array([33, 33, 20, 86 / 3])[:, None, None] for tp in input_types}
             else:
-                exp_mat = load_exp(exp_model, exp_data, attacks)
+                exp_mat = load_exp(exp_model, exp_data, attacks, attr_arch)
             for tp, a in exp_mat.items():
                 if scale:
                     a -= a.min(axis=2).min(axis=1)[:, None, None]
                     a /= a.max(axis=2).max(axis=1)[:, None, None] + 1e-15
-                mats[tp][:, n_sq * idx_model: n_sq * (idx_model + 1), n_sq * idx_data: n_sq * (idx_data + 1)] = a
+                mats[tp][:, n_sq * idx_model: n_sq *
+                         (idx_model + 1), n_sq * idx_data: n_sq * (idx_data + 1)] = a
 
     for tp, a in mats.items():
         for i in range(4):
@@ -172,45 +177,62 @@ def plot_huge(attacks, exps, exp_names, save_dir, prefix="", annot=False, title_
                 dir, f"{prefix}_{i}.png"), bbox_inches='tight', dpi=300)
 
 
-def draw_plot(group, exp, name, annot=False):
+def draw_plot(group, exp, attr_arch, name, annot=False):
     atks = exp['attacks']
     if check_group(group, atks):
         if group[0].get('norm') == 'L2':
             name += '_L2'
         print(name)
-        plot_range(group, exp, prefix=name, annot=annot)
+        plot_range(group, exp, attr_arch, prefix=name, annot=annot)
 
 
 if __name__ == "__main__":
     # shutil.rmtree("figs", ignore_errors=True)
 
-    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[5]], ["Standard", "Robust"], "default_origin_robust", prefix="whitebox", annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust, attacks: whitebox")
-    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[5]], ["Standard", "Robust"], "default_origin_robust_scaled", prefix="whitebox", annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust, attacks: whitebox", scale=True)
-    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[6]], ["Standard", "Robust"], "default_origin_robust_all", prefix="whitebox", annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust all, attacks: whitebox")
-    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[6]], ["Standard", "Robust"], "default_origin_robust_all_scaled", prefix="whitebox", annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust all, attacks: whitebox", scale=True)
+    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[5]], ["Standard", "Robust"], "default_origin_robust",
+              prefix="whitebox", annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust, attacks: whitebox")
+    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[5]], ["Standard", "Robust"], "default_origin_robust_scaled", prefix="whitebox",
+              annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust, attacks: whitebox", scale=True)
+    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[6]], ["Standard", "Robust"], "default_origin_robust_all",
+              prefix="whitebox", annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust all, attacks: whitebox")
+    plot_huge(gargs.WHITEBOX_ATTACKS, [gargs.EXPS[0], gargs.EXPS[6]], ["Standard", "Robust"], "default_origin_robust_all_scaled", prefix="whitebox",
+              annot=False, title_suff="dataset: cifar10, victim: resnet9, setting: origin vs robust all, attacks: whitebox", scale=True)
     exps = gargs.EXPS[:5]
     exp_names = [exp['arch'] for exp in exps]
     print(exp_names)
 
     exps = [exps[i] for i in [1, 3, 0, 4, 2]]
     exp_names = [exp['arch'] for exp in exps]
-    plot_huge(gargs.WHITEBOX_ATTACKS, exps, exp_names, "unseen_archs", prefix="whitebox", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: whitebox")
-    plot_huge(gargs.WHITEBOX_ATTACKS, exps, exp_names, "unseen_archs_scaled", prefix="whitebox", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: whitebox", scale=True)
-    plot_huge(gargs.WHITEBOX_ATTACKS, exps, exp_names, "unseen_archs_masked", prefix="whitebox", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: whitebox", mask_same=True)
-    plot_huge(gargs.PGD_ATTACKS, exps, exp_names, "unseen_archs_masked", prefix="pgd", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: pgd", mask_same=True)
-    plot_huge([gargs.PGD_ATTACKS[1]], exps, exp_names, "unseen_archs_masked", prefix="pgd8", annot=True, title_suff="dataset: cifar10, setting: origin, attacks: pgd8", mask_same=True)
-    plot_huge(gargs.PGD_ATTACKS, exps, exp_names, "unseen_archs", prefix="pgd", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: pgd")
-    plot_huge([gargs.PGD_ATTACKS[1]], exps, exp_names, "unseen_archs", prefix="pgd8", annot=True, title_suff="dataset: cifar10, setting: origin, attacks: pgd8")
+    plot_huge(gargs.WHITEBOX_ATTACKS, exps, exp_names, "unseen_archs", prefix="whitebox",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: whitebox")
+    plot_huge(gargs.WHITEBOX_ATTACKS, exps, exp_names, "unseen_archs_scaled", prefix="whitebox",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: whitebox", scale=True)
+    plot_huge(gargs.WHITEBOX_ATTACKS, exps, exp_names, "unseen_archs_masked", prefix="whitebox",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: whitebox", mask_same=True)
+    plot_huge(gargs.PGD_ATTACKS, exps, exp_names, "unseen_archs_masked", prefix="pgd",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: pgd", mask_same=True)
+    plot_huge([gargs.PGD_ATTACKS[1]], exps, exp_names, "unseen_archs_masked", prefix="pgd8",
+              annot=True, title_suff="dataset: cifar10, setting: origin, attacks: pgd8", mask_same=True)
+    plot_huge(gargs.PGD_ATTACKS, exps, exp_names, "unseen_archs", prefix="pgd",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: pgd")
+    plot_huge([gargs.PGD_ATTACKS[1]], exps, exp_names, "unseen_archs", prefix="pgd8",
+              annot=True, title_suff="dataset: cifar10, setting: origin, attacks: pgd8")
 
-    plot_huge(gargs.FGSM_ATTACKS, exps, exp_names, "unseen_archs_masked", prefix="fgsm", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: fgsm", mask_same=True)
-    plot_huge([gargs.FGSM_ATTACKS[1]], exps, exp_names, "unseen_archs_masked", prefix="fgsm8", annot=True, title_suff="dataset: cifar10, setting: origin, attacks: fgsm8", mask_same=True)
-    plot_huge(gargs.FGSM_ATTACKS, exps, exp_names, "unseen_archs", prefix="fgsm", annot=False, title_suff="dataset: cifar10, setting: origin, attacks: fgsm")
-    plot_huge([gargs.FGSM_ATTACKS[1]], exps, exp_names, "unseen_archs", prefix="fgsm8", annot=True, title_suff="dataset: cifar10, setting: origin, attacks: fgsm8")
+    plot_huge(gargs.FGSM_ATTACKS, exps, exp_names, "unseen_archs_masked", prefix="fgsm",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: fgsm", mask_same=True)
+    plot_huge([gargs.FGSM_ATTACKS[1]], exps, exp_names, "unseen_archs_masked", prefix="fgsm8",
+              annot=True, title_suff="dataset: cifar10, setting: origin, attacks: fgsm8", mask_same=True)
+    plot_huge(gargs.FGSM_ATTACKS, exps, exp_names, "unseen_archs", prefix="fgsm",
+              annot=False, title_suff="dataset: cifar10, setting: origin, attacks: fgsm")
+    plot_huge([gargs.FGSM_ATTACKS[1]], exps, exp_names, "unseen_archs", prefix="fgsm8",
+              annot=True, title_suff="dataset: cifar10, setting: origin, attacks: fgsm8")
+
+    attr_arch = "attrnet"
 
     for exp in gargs.EXPS:
-        draw_plot(gargs.ALL_ATTACKS, exp, "all", False)
-        draw_plot(gargs.BLACKBOX_ATTACKS, exp, "blackbox", False)
-        draw_plot(gargs.WHITEBOX_ATTACKS, exp, "whitebox", False)
+        draw_plot(gargs.ALL_ATTACKS, exp, attr_arch, "all", False)
+        draw_plot(gargs.BLACKBOX_ATTACKS, exp, attr_arch, "blackbox", False)
+        draw_plot(gargs.WHITEBOX_ATTACKS, exp, attr_arch, "whitebox", False)
         for group in gargs.ALL_GROUP:
             name = group[0]['attack']
-            draw_plot(group, exp, name, True)
+            draw_plot(group, exp, attr_arch, name, True)
