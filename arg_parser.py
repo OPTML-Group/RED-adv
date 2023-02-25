@@ -14,7 +14,7 @@ def general_args(parser):
                         help='The directory used to save the trained models')
     parser.add_argument('--tensorboard', action='store_true',
                         help='Using tensorboard during training.')
-    parser.add_argument('--dataset', default="mnist", type=str,
+    parser.add_argument('--dataset', default="cifar10", type=str,
                         choices=['cifar10', "cifar100", "tinyimagenet", "mnist"],
                         help='dataset name')
     parser.add_argument('--dataset-dir', type=str,
@@ -55,7 +55,7 @@ def pruning_args(parser):
 
 
 def model_args(parser):
-    parser.add_argument('--arch', type=str, default="lenet",
+    parser.add_argument('--arch', type=str, default="resnet9",
                         choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11', 'vgg13', 'lenet'])
     parser.add_argument('--act-func', type=str, default="relu",
                         choices=["relu", "tanh", "elu"])
