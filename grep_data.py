@@ -170,9 +170,9 @@ def load_dir_data(dir_path, full=False):
 
 
 def grep_data_correct(dir, save_dir, robust, full_data):
-    ks = [3, 5, 7]
-    acts = ["relu", "tanh", "elu"]
-    prunes = ["0.0", "0.375", "0.375_struct", "0.625", "0.625_struct"]
+    ks = gargs.KERNEL_SIZES
+    acts = gargs.ACTIVATION_FUNCTIONS
+    prunes = gargs.PRUNING_RATIOS # ["0.0", "0.375", "0.375_struct", "0.625", "0.625_struct"]
 
     dirs, lbs = [], []
 

@@ -10,12 +10,13 @@ import global_args as gargs
 def get_models(dataset, arch, robust=True, omp=2):
     _data_arch_name = f"{dataset}_{arch}"
     _model_dir = os.path.join(gargs.MODEL_DIR, _data_arch_name)
+    last_epoch = 100 if dataset == "tinyimagenet" else 75
 
     cnt = 0
-    for k in run.kernels:
-        for a in run.acts:
-            for r in run.ratios:
-                for s in run.struct:
+    for k in run._kernels:
+        for a in run._acts:
+            for r in run._ratios:
+                for s in run._struct:
                     if r == 0.0 and s:
                         continue
                     model_name = "seed{}_kernel{}_act{}_prune{}".format(
@@ -24,7 +25,7 @@ def get_models(dataset, arch, robust=True, omp=2):
                         model_name += "_struct"
                     if robust:
                         model_name += '_robust'
-                    path = os.path.join(_model_dir, f"{model_name}_omp_{omp}/checkpoint_75.pt")
+                    path = os.path.join(_model_dir, f"{model_name}_omp_{omp}/checkpoint_{last_epoch}.pt")
                     # print(path)
 
                     if not os.path.exists(path):
@@ -69,7 +70,23 @@ for exp in gargs.EXPS:
         robust = 'robust' in exp['setting']
         cmds = run.gen_commands_victim(dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
         print(len(cmds), end=' ')
-    cmds = run.gen_commands_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
-    print(len(cmds), end=' ')
-    cmds = run.gen_commands_eval_parsing(dataset=exp['data'], arch=exp['arch'], setting=exp['setting'], attacks=exp['attacks'])
-    print(len(cmds))
+    for attr_arch in ['attrnet', 'conv4']:
+        cmds = run.gen_commands_parsing(exp, attr_arch=attr_arch)
+        cmds2 = run.gen_commands_eval_parsing(exp, attr_arch=attr_arch)
+        print(attr_arch, len(cmds), len(cmds2), end=' ')
+    print()
+for exp1 in gargs.EXPS:
+    for exp2 in gargs.EXPS:
+        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, attr_arch="attrnet")
+        print(len(cmds), end='\t')
+    print()
+for attr in gargs.VALID_ATTR_ARCHS:
+    cmds = run.gen_commands_parsing(gargs.EXPS[0], attr)
+    cmds2 = run.gen_commands_eval_parsing(gargs.EXPS[0], attr)
+    print(attr, len(cmds), len(cmds2), end=" ")
+cnt = 0
+for exp1 in gargs.EXPS[:5]:
+    for exp2 in gargs.EXPS[:5]:
+        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, "conv4")
+        cnt += len(cmds)
+print(cnt)
