@@ -261,20 +261,21 @@ if __name__ == "__main__":
         # parsing training
         # need call grep_data.py before training parsing models
         commands = []
-        for at_arch in gargs.VALID_ATTR_ARCHS:
-            commands += train_parsing_commands(attr_arch=at_arch)
+        # for at_arch in gargs.VALID_ATTR_ARCHS:
+        #     commands += train_parsing_commands(attr_arch=at_arch)
+        commands += train_parsing_commands(attr_arch="conv4")
         run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
                     suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
         commands = []
 
         # parsing cross testing
-        commands += cross_test_parsing_commands(attr_arch="attrnet")
+        # commands += cross_test_parsing_commands(attr_arch="attrnet")
         commands += cross_test_parsing_commands(attr_arch="conv4")
     
         # parsing testing
-        for at_arch in gargs.VALID_ATTR_ARCHS[1:]:
-            commands += test_parsing_commands(attr_arch=at_arch)
+        # for at_arch in gargs.VALID_ATTR_ARCHS[1:]:
+        #     commands += test_parsing_commands(attr_arch=at_arch)
 
         run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
                      suffix="commands3", shuffle=False, delay=4)
