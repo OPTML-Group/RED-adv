@@ -28,7 +28,7 @@ def main():
     model = models.get_model(args.arch, args)
     model = model.cuda()
 
-    if args.dataset == 'mnist':
+    if args.dataset != 'mnist':
         prefix = "seed{}_kernel{}_act{}_prune{}_".format(
             args.seed, args.kernel_size, args.act_func, args.pruning_ratio)
     else:
