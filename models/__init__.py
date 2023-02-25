@@ -1,8 +1,8 @@
-from .convnet import ConvNet
 from .resnet9 import ResNet9
 from .resnet import resnet18
 from .resnet_s import resnet20
 from .vgg import VGG
+from .lenet import LeNet
 
 
 def get_model(name, args):
@@ -17,5 +17,7 @@ def get_model(name, args):
         return VGG(args, 'VGG11')
     elif name == "vgg13":
         return VGG(args, 'VGG13')
+    elif name == "lenet":
+        return LeNet(args)
     else:
         raise NotImplementedError(f"Arch {name} not Implemented!")
