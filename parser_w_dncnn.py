@@ -2,7 +2,7 @@ from IPython import embed
 from torch.utils.data import Dataset, DataLoader
 
 import torch as ch
-from torch.cuda.amp import autocast 
+from torch.cuda.amp import autocast
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
@@ -29,12 +29,14 @@ parser.add_argument('--save_folder', type=str)
 # dncnn args
 parser.add_argument('--ims_adv_data', type=str, default='x_adv')
 parser.add_argument('--weight-decay', '--wd', default=1e-4, type=float,
-                    metavar='W', help='weight decay (default: 1e-4)')     
-parser.add_argument('--denoiser_lr', type=float, default=1e-4)    
-parser.add_argument('--lambda1',type=float, default=15, help='the coefficient of attribution loss')
-parser.add_argument('--gamma1',type=float, default=1, help='the coefficient of mae loss')
+                    metavar='W', help='weight decay (default: 1e-4)')
+parser.add_argument('--denoiser_lr', type=float, default=1e-4)
+parser.add_argument('--lambda1', type=float, default=15,
+                    help='the coefficient of attribution loss')
+parser.add_argument('--gamma1', type=float, default=1,
+                    help='the coefficient of mae loss')
 parser.add_argument('--denoiser', type=str, default='/mnt/bd54d31c-6d91-4e34-ade3-147352501ebb/yifan/Reverse-Engineering-of-Imperceptible-Adversarial-Image-Perturbations/denoiser_pt/DO.pth.tar',
-                        help='Path to a denoiser ')
+                    help='Path to a denoiser ')
 
 
 args = parser.parse_args()
@@ -56,8 +58,9 @@ label = label.detach().cuda()
 print(label.shape)
 
 # adv img path
-ims_adv_data = ch.load( f"{args.input_folder}/{args.ims_adv_data}.pt")
+ims_adv_data = ch.load(f"{args.input_folder}/{args.ims_adv_data}.pt")
 ims_adv_data.cuda()
+
 
 class M(Dataset):
     def __init__(self, data, ims_adv_data, label):
@@ -65,7 +68,7 @@ class M(Dataset):
         self.data = data
         self.ims_adv_data = ims_adv_data
         self.label = label
-        
+
     def __getitem__(self, i):
         return self.data[i], self.ims_adv_data[i], self.label[i]
 
@@ -131,7 +134,8 @@ denoiser = DnCNN(image_channels=3, depth=17, n_channels=64).cuda()
 checkpoint = ch.load(args.denoiser)
 denoiser = denoiser.cuda()
 denoiser.load_state_dict(checkpoint['state_dict'])
-optimizer = optim.SGD([{'params': denoiser.parameters()}, {'params': attr_model.parameters(), 'lr': args.lr}], lr=args.denoiser_lr)
+optimizer = optim.SGD([{'params': denoiser.parameters()}, {
+                      'params': attr_model.parameters(), 'lr': args.lr}], lr=args.denoiser_lr)
 scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
 MAE = ch.nn.L1Loss(size_average=None, reduce=None, reduction='mean').cuda()
 
@@ -166,14 +170,12 @@ for i in range(args.epochs):
             optimizer.step()
             optimizer.zero_grad()
 
-            
     print(f"Epoch: {i+1}")
     print(f"Train acc:{correct_train/train_size*100}")
     print(f"Train loss: {loss.item()}")
-    print(f"Epoch: {i+1}", file = fout)
-    print(f"Train acc:{correct_train/train_size*100}", file = fout)
-    print(f"Train loss: {loss.item()}", file = fout)
-
+    print(f"Epoch: {i+1}", file=fout)
+    print(f"Train acc:{correct_train/train_size*100}", file=fout)
+    print(f"Train loss: {loss.item()}", file=fout)
 
     scheduler.step()
     attr_model.eval()
@@ -192,8 +194,8 @@ for i in range(args.epochs):
 
     print(f"Test acc:{correct_test/test_size*100}")
     print(f"Test loss: {loss.item()}")
-    print(f"Test acc:{correct_test/test_size*100}", file = fout)
-    print(f"Test loss: {loss.item()}", file = fout)
+    print(f"Test acc:{correct_test/test_size*100}", file=fout)
+    print(f"Test loss: {loss.item()}", file=fout)
 
 ch.save(attr_model.state_dict(), os.path.join(args.save_folder, "final.pt"))
 # save path
