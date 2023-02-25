@@ -1,4 +1,3 @@
-from .convnet import ConvNet
 from .resnet9 import ResNet9
 from .resnet import resnet18
 from .resnet_s import resnet20
