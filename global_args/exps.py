@@ -29,6 +29,8 @@ def _get_exps():
     )]
     # arch ablation
     for arch in archs[1:]:
+        if arch == 'lenet':
+            continue
         s = dict(
             arch=arch,
             data=default_data,
@@ -49,6 +51,8 @@ def _get_exps():
     for data in datasets[1:]:
         if data == "tinyimagenet":
             arch = "resnet18"
+        elif data == "mnist":
+            continue
         else:
             arch = default_arch
         s = dict(
