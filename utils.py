@@ -38,7 +38,7 @@ def count_element(arr):
     cnt = []
     for key in keys:
         cnt.append((arr == key).int().sum())
-    return np.array(cnt)
+    return cnt
 
 
 def count_element_vector(arr):  # hard coded
@@ -50,7 +50,7 @@ def get_datasets_from_tensor_with_cnt(data, label, cnt, cuda=False):
     train_data, train_label, test_data, test_label = [], [], [], []
     st = 0
     for num in cnt:
-        test_num = num // 10
+        test_num = int(num * 0.2)
 
         train_data.append(data[st + test_num: st + num])
         train_label.append(label[st + test_num: st + num])

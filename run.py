@@ -7,7 +7,7 @@ import global_args as gargs
 _kernels = gargs.KERNEL_SIZES
 _acts = gargs.ACTIVATION_FUNCTIONS
 _ratios = gargs.PRUNING_RATIOS
-_struct = [False, True]
+_struct = [False]
 
 
 def get_attack_name(atk):
@@ -67,8 +67,8 @@ def gen_commands_victim(dataset, arch, attacks, robust):
                             commands.append(command)
                         else:
                             if not (os.path.exists(os.path.join(atk_path, model_name, 'ori_pred.pt')) and
-                                    os.path.exists(os.path.join(atk_path, model_name, 'attack_acc.log'))) and \
-                                    not os.path.exists(os.path.join(atk_path, model_name, 'x_adv.pt')):
+                                    os.path.exists(os.path.join(atk_path, model_name, 'attack_acc.log'))):# and \
+                                    # not os.path.exists(os.path.join(atk_path, model_name, 'x_adv.pt')):
                                 # print(path)
                                 if idx == 0 or idx > 0 and os.path.exists(path):
                                     commands.append(command)
@@ -194,7 +194,7 @@ def gen_commands_eval_parsing(exp, attr_arch):
 
 def train_victim_commands():
     commands = []
-    for exp in gargs.EXPS[::-1][:1]:
+    for exp in gargs.EXPS:
         if exp['setting'] not in 'origin robust':
             continue
         robust = 'robust' in exp['setting']
@@ -229,10 +229,12 @@ def cross_test_parsing_commands(attr_arch):
     for exp1 in gargs.EXPS[:5]:
         for exp2 in gargs.EXPS[:5]:
             commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch)
-    # exp2 = gargs.EXPS[0]
-    # for exp1 in gargs.EXPS[5:] + gargs.EXPS[1:2]:
-    #     commands += gen_commands_eval_parsing_cross(exp1, exp2)
-    #     commands += gen_commands_eval_parsing_cross(exp2, exp1)
+    exp1 = gargs.EXPS[0]
+    for exp2 in gargs.EXPS[5:]:
+        commands += gen_commands_eval_parsing_cross(exp2, exp2, attr_arch)
+    for exp2 in gargs.EXPS[5:]:
+        commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch)
+        commands += gen_commands_eval_parsing_cross(exp2, exp1, attr_arch)
     print(len(commands))
     return commands
 
@@ -241,12 +243,14 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser("train")
     parser.add_argument('--stage', type=int)
+    parser.add_argument('--gpus', type=str, default="0,1,2,3,4,5,6,7", help="e.g.: --gpu 0,1,2,3")
     parser.add_argument('--debug', action="store_true")
-    parser.add_argument('--thread', type=int)
+    parser.add_argument('--thread', type=int, default=1)
     args = parser.parse_args()
     debug = args.debug
     stage = args.stage
     th = args.thread
+    gpus = [int(g) for g in args.gpus.split(',')]
 
     # call each code block seperatly
 
@@ -255,7 +259,7 @@ if __name__ == "__main__":
         ext = f" --ffcv-dir {gargs.FFCV_FORMAT}"
 
         commands = train_victim_commands()
-        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
+        run_commands(gpus * th if not debug else [0], commands, call=not debug,
                     ext_command=ext, suffix="commands1", shuffle=False, delay=1)
     elif stage == 2:
         # parsing training
@@ -264,7 +268,7 @@ if __name__ == "__main__":
         # for at_arch in gargs.VALID_ATTR_ARCHS:
         #     commands += train_parsing_commands(attr_arch=at_arch)
         commands += train_parsing_commands(attr_arch="conv4")
-        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
+        run_commands(gpus * th if not debug else [0], commands, call=not debug,
                     suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
         commands = []
@@ -277,5 +281,5 @@ if __name__ == "__main__":
         # for at_arch in gargs.VALID_ATTR_ARCHS[1:]:
         #     commands += test_parsing_commands(attr_arch=at_arch)
 
-        run_commands([1, 2, 3, 4, 5, 6, 7, 0] * th if not debug else [0], commands, call=not debug,
+        run_commands(gpus * th if not debug else [0], commands, call=not debug,
                      suffix="commands3", shuffle=False, delay=4)
