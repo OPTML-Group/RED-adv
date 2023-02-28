@@ -6,7 +6,7 @@ PRUNING_RATIOS = [0.0, 0.375, 0.625]
 
 
 VALID_DATASETS = ["cifar10", "cifar100", "tinyimagenet", "mnist"]
-VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13', 'lenet']
+VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']#, 'lenet']
 
 VALID_SETTINGS = ['origin', 'robust', 'robust_all']
 VALID_ATTR_ARCHS = ["mlp", "lenet", "attrnet", "conv2", "conv4", "resnet9"]

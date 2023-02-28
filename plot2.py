@@ -25,7 +25,7 @@ def load_attr(attr_arch, dataset, arch, setting, attacks):
     return mats
 
 
-def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
+def plot_attr(attacks, attack_name, save_dir="attr_perf"):
     exp = gargs.EXPS[0]
 
     dataset = exp['data']
@@ -35,7 +35,8 @@ def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
     display_names = [plot.get_attack_display_name(atk) for atk in attacks]
 
     attr_archs = [gargs.VALID_ATTR_ARCHS[i]
-                  for i in range(len(gargs.VALID_ATTR_ARCHS))]
+                  for i in [0, 1, 2, 4]]
+    attr_archs_show = "MLP,LeNet,ConvNet-2,ConvNet-4".split(",")
 
     mats = {tp: np.zeros([4, len(attr_archs), len(attacks)])
             for tp in plot.input_types}
@@ -54,17 +55,17 @@ def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
             dir = os.path.join('figs', save_dir, f"{tp}_{i}")
             os.makedirs(dir, exist_ok=True)
             plt.clf()
-            heatmap = sns.heatmap(a[i], annot=annot, fmt=".2f",
-                                  linewidths=0.5 * annot, cmap="vlag",
-                                  xticklabels=display_names, yticklabels=attr_archs)
+            heatmap = sns.heatmap(a[i], annot=False, fmt=".2f", square=True, vmin=0, vmax=100,
+                                  linewidths=0.5, cmap=sns.light_palette("seagreen", as_cmap=True),
+                                  xticklabels=display_names, yticklabels=attr_archs_show, cbar_kws={"shrink": 0.1})
             heatmap.set_yticklabels(heatmap.get_yticklabels(), fontsize=8)
             heatmap.set_xticklabels(heatmap.get_xticklabels(), fontsize=5)
 
             plt.title(
                 f"Model Parsing Accuracy on {name[i]} from {tp}(%)", fontsize=15)
-            plt.ylabel("Attribution Network",
-                       fontsize=13)  # x-axis label with fontsize 15
-            plt.xlabel("Attack Methods", fontsize=13)
+            # plt.ylabel("Attribution Network",
+            #            fontsize=10)  # x-axis label with fontsize 15
+            # plt.xlabel("Attack Methods", fontsize=10)
             plt.xticks(rotation=45, ha='right')
             plt.savefig(os.path.join(
                 dir, f"{attack_name}_{i}.png"), bbox_inches='tight', dpi=300)

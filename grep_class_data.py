@@ -41,9 +41,9 @@ def grep_attack(dataset, arch, setting, attacks, attack_name):
         print(f"Dump to {save_path}.")
 
 
-def grep_class(dataset, setting, attack_name):
+def grep_class(dataset, setting, attack_name, model_archs, archs_name):
     save_dir = os.path.join(
-        gargs.GREP_DIR, f"{dataset}_archs", setting, attack_name)
+        gargs.GREP_DIR, f"{dataset}_{archs_name}", setting, attack_name)
     os.makedirs(save_dir, exist_ok=True)
 
     for name in grep_data.output_names_split:
@@ -51,9 +51,10 @@ def grep_class(dataset, setting, attack_name):
         if os.path.exists(save_path):
             print(f"{save_path} exists!")
             continue
+        print(f"Dump to {save_path}.")
 
         items = []
-        for idx_arch, arch in enumerate(gargs.VALID_ARCHITECTURES):
+        for idx_arch, arch in enumerate(model_archs):
             attack_dir = os.path.join(
                 gargs.GREP_DIR, f"{dataset}_{arch}", setting, attack_name)
             path = os.path.join(attack_dir, name)
@@ -68,7 +69,7 @@ def grep_class(dataset, setting, attack_name):
         print(items.shape)
 
         torch.save(items, save_path)
-        print(f"Dump to {save_path}.")
+        print(f"Dump to {save_path} success.")
 
 
 if __name__ == "__main__":
@@ -78,4 +79,5 @@ if __name__ == "__main__":
 
     for attack in gargs.WHITEBOX_ATTACKS:
         attack_name = run.get_attack_name(attack)
-        grep_class("cifar10", "origin", attack_name)
+        grep_class("cifar10", "origin", attack_name, gargs.VALID_ARCHITECTURES, "full_archs")
+        grep_class("cifar10", "origin", attack_name, ["resnet9", "vgg11", "resnet20s"], "partial_archs")
