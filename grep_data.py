@@ -1,5 +1,6 @@
 import os
 import shutil
+import tqdm
 
 import torch
 
@@ -9,7 +10,9 @@ import run
 partial_result_names = ["x_adv.pt", "delta.pt"]
 full_result_names = ["adv_all.pt", "delta_all.pt",
                      "adv_pred.pt", "ori_pred.pt", "targets.pt"]
-output_names = ["x_adv.pt", "delta.pt", "attr_labels.pt"]
+output_names_no_split = ["x_adv.pt", "delta.pt", "attr_labels.pt"]
+output_names_split = ["x_adv_train.pt", "delta_train.pt", "attr_labels_train.pt",
+                      "x_adv_test.pt", "delta_test.pt", "attr_labels_test.pt"]
 
 
 def _check_data_exists(dir, names):
@@ -122,23 +125,52 @@ def _clean_up_all():
 #     exit(0)
 
 
-def grep_from_full_result(dir_path, full=False):
-    datas = _load_datas(
-        dir_path, full_result_names)
-    _check_datas(datas, after=True, log_path=os.path.join(
-        dir_path, 'attack_acc.log'))
-    x_adv, delta, adv_pred, ori_pred, target = datas
+def _get_dataset_name(path):
+    for name in ["cifar100", "cifar10", 'tinyimagenet']:
+        if name in path:
+            return name
+    raise NotImplementedError(f"Not implemented! {path}")
 
+
+_exist_order = {}
+
+
+def _check_data_order(datas, path):
+    origin = datas[0] - datas[1]
+    dataset_name = _get_dataset_name(path)
+    global _exist_order
+    if _exist_order.get(dataset_name) is None:
+        _exist_order[dataset_name] = origin
+        # print(f"Save order {dataset_name}! {path}")
+    else:
+        assert (_exist_order[dataset_name] -
+                origin).abs().max() < 1e-6, f"Order different {dataset_name}! {path}"
+        # print(f"Check order success {dataset_name}! {path}")
+
+
+def process_full_result(x_adv, delta, adv_pred, ori_pred, target, full):
     if full:
-        return x_adv, delta
-
+        return (x_adv, delta)
     succ = adv_pred.ne(target)
     corr = ori_pred.eq(target)
 
     corr_succ_idx = succ * corr
     partial_delta = delta[corr_succ_idx]
     partial_adv = x_adv[corr_succ_idx]
-    return partial_adv, partial_delta
+    return (partial_adv, partial_delta)
+
+
+def grep_from_full_result(dir_path, full, split):
+    datas = _load_datas(dir_path, full_result_names)
+    _check_datas(datas, after=True, log_path=os.path.join(
+        dir_path, 'attack_acc.log'))
+    _check_data_order(datas, dir_path)
+    if not split:
+        return [process_full_result(*datas, full)]
+    split_n = int(len(datas[0]) * 0.8)
+    d_train = [a[:split_n] for a in datas]
+    d_test = [a[split_n:] for a in datas]
+    return [process_full_result(*d_train, full), process_full_result(*d_test, full)]
 
 
 def grep_from_partial_result(dir_path):
@@ -147,13 +179,17 @@ def grep_from_partial_result(dir_path):
     return datas
 
 
-def _concat_and_save(x_advs, deltas, labels, save_dir):
+def _concat_and_save_patch(save_dir, datas, names):
     os.makedirs(save_dir, exist_ok=True)
-    x_adv_name, delta_name, label_name = output_names
+
+    x_adv_name, delta_name, label_name = names
+
+    x_advs, deltas, labels = datas
 
     x_advs = torch.cat(x_advs, axis=0).float()
     deltas = torch.cat(deltas, axis=0).float()
     labels = torch.cat(labels, axis=0).long()
+
     print(x_advs.shape, deltas.shape, labels.shape)
     assert x_advs.shape == deltas.shape and x_advs.shape[0] == labels.shape[0]
 
@@ -162,21 +198,29 @@ def _concat_and_save(x_advs, deltas, labels, save_dir):
     torch.save(labels, os.path.join(save_dir, label_name))
 
 
-def load_dir_data(dir_path, full=False):
-    if _check_data_exists(dir_path, full_result_names):
-        return grep_from_full_result(dir_path, full)
+def _concat_and_save(save_dir, datas, split):
+    if not split:
+        _concat_and_save_patch(save_dir, datas[0], output_names_no_split)
     else:
+        _concat_and_save_patch(save_dir, datas[0], output_names_split[:3])
+        _concat_and_save_patch(save_dir, datas[1], output_names_split[3:])
+
+
+def load_dir_data(dir_path, full, split):
+    if split or full or _check_data_exists(dir_path, full_result_names):
+        return grep_from_full_result(dir_path, full, split)
+    else:
+        raise NotImplementedError("No partial!!!!")
         return grep_from_partial_result(dir_path)
 
 
-def grep_data_correct(dir, save_dir, robust, full_data):
+def grep_data_correct(dir, save_dir, robust, full_data, split):
     ks = gargs.KERNEL_SIZES
     acts = gargs.ACTIVATION_FUNCTIONS
-    prunes = gargs.PRUNING_RATIOS # ["0.0", "0.375", "0.375_struct", "0.625", "0.625_struct"]
+    # ["0.0", "0.375", "0.375_struct", "0.625", "0.625_struct"]
+    prunes = gargs.PRUNING_RATIOS
 
     dirs, lbs = [], []
-
-    x_advs, deltas, labels = [], [], []
 
     # grep dirs
     for idx_k, k in enumerate(ks):
@@ -186,30 +230,35 @@ def grep_data_correct(dir, save_dir, robust, full_data):
                 if robust:
                     dir_name += "_robust"
                 dir_path = os.path.join(dir, dir_name)
-                assert _check_data_exists(dir_path, full_result_names) or (
-                    not full_data and _check_data_exists(dir_path, partial_result_names))
+                assert _check_data_exists(dir_path, full_result_names)
+                # or (not full_data and _check_data_exists(dir_path, partial_result_names))
                 dirs.append(dir_path)
                 lbs.append([idx_k, idx_a, idx_p])
 
-    for dir, lb in zip(dirs, lbs):
-        adv, dt = load_dir_data(dir, full=full_data)
-        n_item = adv.shape[0]
+    export_datas = [[[], [], []]] if not split else [
+        [[], [], []], [[], [], []]]
 
-        x_advs.append(adv)
-        deltas.append(dt)
+    for dir, lb in tqdm.tqdm(list(zip(dirs, lbs))):
+        datas = load_dir_data(dir, full=full_data, split=split)
 
-        labels.append(torch.Tensor([lb] * n_item))
+        for data, export in zip(datas, export_datas):
+            n_item = data[0].shape[0]
+            export[0].append(data[0])
+            export[1].append(data[1])
+            export[2].append(torch.LongTensor([lb] * n_item).cpu())
 
-    _concat_and_save(x_advs, deltas, labels, save_dir)
+    _concat_and_save(save_dir, export_datas, split)
 
 
-def grep_setting(dataset, arch, setting_name, attacks):
+def grep_setting(dataset, arch, setting_name, attacks, split):
     data_arch = f"{dataset}_{arch}"
     atk_dir = os.path.join(gargs.ATK_DIR, data_arch)
     save_dir = os.path.join(gargs.GREP_DIR, data_arch)
     print(f"Setting: {setting_name}")
     robust = "robust" in setting_name
     full = "all" in setting_name
+
+    output_names = output_names_split if split else output_names_no_split
     for atk in attacks:
         atk_name = run.get_attack_name(atk)
 
@@ -217,14 +266,6 @@ def grep_setting(dataset, arch, setting_name, attacks):
         grep_save_dir = os.path.join(save_dir, setting_name, atk_name)
 
         if _check_data_exists(grep_save_dir, output_names):
-            # datas = _load_datas(grep_save_dir, output_names)
-            # print(f"Check {atk_name} {setting_name}")
-            # assert datas[0].shape == datas[1].shape
-            # print(datas[0].max(), datas[1].max(), datas[0].abs().mean(), datas[1].abs().mean())
-            # if datas[0].abs().mean() < datas[1].abs().mean():
-            #     print("Swap")
-            #     datas[0], datas[1] = datas[1], datas[0]
-            #     _save_datas(grep_save_dir, output_names, datas)
             continue
 
         print(f"Grep from: '{grep_atk_dir}'")
@@ -232,7 +273,7 @@ def grep_setting(dataset, arch, setting_name, attacks):
 
         try:
             grep_data_correct(grep_atk_dir, grep_save_dir,
-                              robust=robust, full_data=full)
+                              robust=robust, full_data=full, split=split)
         except AssertionError as inst:
             print(inst)
         except Exception as inst:
@@ -243,4 +284,5 @@ def grep_setting(dataset, arch, setting_name, attacks):
 
 if __name__ == "__main__":
     for exp in gargs.EXPS:
-        grep_setting(exp['data'], exp['arch'], exp['setting'], exp["attacks"])
+        grep_setting(exp['data'], exp['arch'], exp['setting'],
+                     exp["attacks"], split=True)

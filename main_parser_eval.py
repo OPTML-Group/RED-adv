@@ -1,7 +1,7 @@
 from IPython import embed
 from torch.utils.data import Dataset, DataLoader
 
-import torch as ch
+import torch
 from torch.cuda.amp import autocast 
 
 from tqdm import tqdm
@@ -29,62 +29,43 @@ parser.add_argument('--attr-arch', type=str, choices=gargs.VALID_ATTR_ARCHS)
 args = parser.parse_args()
 
 seed = args.seed
-ch.manual_seed(seed)
-ch.cuda.manual_seed(seed)
-ch.cuda.manual_seed_all(seed)
-ch.backends.cudnn.benchmark = False
-ch.backends.cudnn.deterministic = True
+torch.manual_seed(seed)
+torch.cuda.manual_seed(seed)
+torch.cuda.manual_seed_all(seed)
+torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True
 
-data = ch.load(os.path.join(args.input_folder, f"{args.input_type}.pt"))
-data = data.detach().cuda()
-print(data.shape)
-label = ch.load(os.path.join(args.input_folder, f"attr_labels.pt"))
-label = label.detach().cuda()
-print(label.shape)
-# embed()
-
-class M(Dataset):
-    def __init__(self, data, label):
-        super().__init__()
-        self.data = data
-        self.label = label
-
-    def __getitem__(self, i):
-        return self.data[i], self.label[i]
-
-    def __len__(self):
-        return len(self.data)
+# test data
+test_data = torch.load(os.path.join(args.input_folder, f"{args.input_type}_test.pt")).detach().cuda()
+test_label = torch.load(os.path.join(args.input_folder, f"attr_labels_test.pt")).detach().cuda()
+test_size = test_data.shape[0]
+test_set = torch.utils.data.TensorDataset(test_data, test_label)
+test_dl = torch.utils.data.DataLoader(
+        test_set, batch_size=args.batch_size, shuffle=False)
+print(test_data.shape, test_label.shape)
 
 
-ds = M(data, label)
-
-train_size = int(0.8 * len(ds))
-test_size = len(ds) - train_size
-train_dataset, test_dataset = ch.utils.data.random_split(
-    ds, [train_size, test_size])
-
-train_dl = DataLoader(train_dataset, batch_size=args.batch_size)
-test_dl = DataLoader(test_dataset, batch_size=args.batch_size)
-
-
-use_cuda = ch.cuda.is_available()
-device = ch.device("cuda" if use_cuda else "cpu")
-
+n_class = test_label.max() + 1
+n_output = test_label.shape[1]
 dataset = args.dataset
+
+print(f"class num: {n_class}, output num: {n_output}")
+
 model = attr_models.get_model(
     args.attr_arch,
     num_channel=gargs.DATASET_NUM_CHANNEL[dataset],
-    num_class=5,
-    num_output=3,
+    num_class=n_class,
+    num_output=n_output,
     img_size=gargs.DATASET_INPUT_SIZE[dataset]
-).to(device)
+).cuda()
 
-model.load_state_dict(ch.load(os.path.join(args.save_folder, "final.pt")), strict=False)
+assert os.path.exists(os.path.join(args.save_folder, "final.pt"))
+model.load_state_dict(torch.load(os.path.join(args.save_folder, "best.pt")), strict=False)
 
 model.cuda()
 model.eval()
-correct_test = ch.zeros([3]).cuda()
-for x,  y in tqdm(test_dl):
+correct_test = torch.zeros([3]).cuda()
+for x,  y in test_dl:
     with autocast():
         x = x
         y = y.cuda().long()
