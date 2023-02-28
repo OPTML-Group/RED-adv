@@ -2,9 +2,12 @@ from .lenet import LeNet
 from .conv2 import AttrNet, ConvNet2
 from .conv4 import ConvNet4
 from .resnset9 import ResNet9
+from .mlp import MLP
 
 def get_model(name, num_channel, num_class, num_output, img_size):
-    if name == "lenet":
+    if name == "mlp":
+        return MLP(num_channel, num_class, num_output, img_size)
+    elif name == "lenet":
         return LeNet(num_channel, num_class, num_output, img_size)
     elif name == "attrnet":
         return AttrNet(num_channel, num_class, num_output, img_size)

@@ -1,4 +1,5 @@
 import argparse
+import global_args as gargs
 
 
 def general_args(parser):
@@ -15,7 +16,7 @@ def general_args(parser):
     parser.add_argument('--tensorboard', action='store_true',
                         help='Using tensorboard during training.')
     parser.add_argument('--dataset', default="cifar10", type=str,
-                        choices=['cifar10', "cifar100", "tinyimagenet", "mnist"],
+                        choices=gargs.VALID_DATASETS,
                         help='dataset name')
     parser.add_argument('--dataset-dir', type=str,
                         help='dataset dir')
@@ -56,9 +57,9 @@ def pruning_args(parser):
 
 def model_args(parser):
     parser.add_argument('--arch', type=str, default="resnet9",
-                        choices=['resnet9', 'resnet18', 'resnet20s', 'vgg11', 'vgg13', 'lenet'])
+                        choices=gargs.VALID_ARCHITECTURES)
     parser.add_argument('--act-func', type=str, default="relu",
-                        choices=["relu", "tanh", "elu"])
+                        choices=gargs.ACTIVATION_FUNCTIONS)
     parser.add_argument('--kernel-size', type=int,
                         default=3, choices=[1, 3, 5, 7]) # ks can be chosen from 1,3,5 for mnist and 3,5,7 for others. 
     parser.add_argument('--num_conv', type=int,

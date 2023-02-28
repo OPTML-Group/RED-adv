@@ -86,7 +86,7 @@ best_epoch = 0
 for i in range(args.epochs):
     model.train()
 
-    print(f"Epoch: {i}")
+    # print(f"Epoch: {i}")
     print(f"Epoch: {i}", file=fout)
 
     correct_train = torch.zeros([3]).cuda()
@@ -104,7 +104,7 @@ for i in range(args.epochs):
 
     train_acc = list((correct_train/train_size*100).cpu().numpy())
     train_print = ", ".join("{:.2f}".format(x) for x in train_acc)
-    print(f"Train acc: {train_print}")
+    print(f"Epoch: {i}, Train acc: {train_print}")
     print(f"Train acc: {train_print}", file=fout)
 
     scheduler.step()
@@ -129,7 +129,7 @@ for i in range(args.epochs):
     test_print = ", ".join("{:.2f}".format(x) for x in test_acc)
 
     print(
-        f"Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}")
+        f"Epoch: {i}, Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}")
     print(
         f"Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}", file=fout)
 

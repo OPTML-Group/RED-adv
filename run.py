@@ -207,7 +207,7 @@ def train_victim_commands():
 
 def train_parsing_commands(attr_arch):
     commands = []
-    if attr_arch not in ['attrnet', 'conv4']:
+    if attr_arch not in ['conv4']:
         commands += gen_commands_parsing(gargs.EXPS[0], attr_arch)
     else:
         for exp in gargs.EXPS:
@@ -267,6 +267,7 @@ if __name__ == "__main__":
         commands = []
         # for at_arch in gargs.VALID_ATTR_ARCHS:
         #     commands += train_parsing_commands(attr_arch=at_arch)
+        commands += train_parsing_commands(attr_arch="mlp")
         commands += train_parsing_commands(attr_arch="conv4")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                     suffix="commands2", shuffle=False, delay=1)
@@ -276,6 +277,7 @@ if __name__ == "__main__":
         # parsing cross testing
         # commands += cross_test_parsing_commands(attr_arch="attrnet")
         commands += cross_test_parsing_commands(attr_arch="conv4")
+        commands += test_parsing_commands(attr_arch="mlp")
     
         # parsing testing
         # for at_arch in gargs.VALID_ATTR_ARCHS[1:]:

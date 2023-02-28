@@ -84,9 +84,10 @@ for attr in gargs.VALID_ATTR_ARCHS:
     cmds = run.gen_commands_parsing(gargs.EXPS[0], attr)
     cmds2 = run.gen_commands_eval_parsing(gargs.EXPS[0], attr)
     print(attr, len(cmds), len(cmds2), end=" ")
+print()
 cnt = 0
 for exp1 in gargs.EXPS[:5]:
     for exp2 in gargs.EXPS[:5]:
         cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, "conv4")
         cnt += len(cmds)
-print(cnt)
+print("conv4", cnt)

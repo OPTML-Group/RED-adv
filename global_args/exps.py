@@ -9,7 +9,7 @@ VALID_DATASETS = ["cifar10", "cifar100", "tinyimagenet", "mnist"]
 VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13', 'lenet']
 
 VALID_SETTINGS = ['origin', 'robust', 'robust_all']
-VALID_ATTR_ARCHS = ["attrnet", "lenet", "conv4", "resnet9"]
+VALID_ATTR_ARCHS = ["attrnet", "lenet", "conv4", "resnet9", "mlp"]
 
 
 def _get_exps():
