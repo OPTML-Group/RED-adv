@@ -15,10 +15,10 @@ def grep_attack(dataset, arch, setting, attacks, attack_name):
     da_dir = os.path.join(gargs.GREP_DIR, f"{dataset}_{arch}")
     setting_dir = os.path.join(da_dir, setting)
     save_dir = os.path.join(da_dir, f"grouped_attack_{setting}", attack_name)
-    
+
     os.makedirs(save_dir, exist_ok=True)
 
-    for name in grep_data.output_names:
+    for name in grep_data.output_names_split:
         items = []
 
         save_path = os.path.join(save_dir, name)
@@ -42,10 +42,11 @@ def grep_attack(dataset, arch, setting, attacks, attack_name):
 
 
 def grep_class(dataset, setting, attack_name):
-    save_dir = os.path.join(gargs.GREP_DIR, f"{dataset}_archs", setting, attack_name)
+    save_dir = os.path.join(
+        gargs.GREP_DIR, f"{dataset}_archs", setting, attack_name)
     os.makedirs(save_dir, exist_ok=True)
 
-    for name in grep_data.output_names:
+    for name in grep_data.output_names_split:
         save_path = os.path.join(save_dir, name)
         if os.path.exists(save_path):
             print(f"{save_path} exists!")
@@ -53,12 +54,14 @@ def grep_class(dataset, setting, attack_name):
 
         items = []
         for idx_arch, arch in enumerate(gargs.VALID_ARCHITECTURES):
-            attack_dir = os.path.join(gargs.GREP_DIR, f"{dataset}_{arch}", setting, attack_name)
+            attack_dir = os.path.join(
+                gargs.GREP_DIR, f"{dataset}_{arch}", setting, attack_name)
             path = os.path.join(attack_dir, name)
             print(f"Load from {path}.")
             item = torch.load(path)
             if name == "attr_labels.pt":
-                item = torch.cat([item, torch.ones(item.shape[0], 1) * idx_arch], axis=1).detach()
+                item = torch.cat(
+                    [item, torch.zeros(item.shape[0], 1, dtype=int) + idx_arch], axis=1).detach().long()
             items.append(item)
 
         items = torch.cat(items, axis=0).detach()

@@ -8,6 +8,7 @@ import plot
 import global_args as gargs
 import run
 
+
 def load_attr(attr_arch, dataset, arch, setting, attacks):
     attr_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch)
     da_dir = os.path.join(attr_dir, f"{dataset}_{arch}")
@@ -23,6 +24,7 @@ def load_attr(attr_arch, dataset, arch, setting, attacks):
         mats[tp] = a
     return mats
 
+
 def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
     exp = gargs.EXPS[0]
 
@@ -32,9 +34,11 @@ def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
 
     display_names = [plot.get_attack_display_name(atk) for atk in attacks]
 
-    attr_archs = [gargs.VALID_ATTR_ARCHS[i] for i in [1, 0, 2, 3]]
+    attr_archs = [gargs.VALID_ATTR_ARCHS[i]
+                  for i in range(len(gargs.VALID_ATTR_ARCHS))]
 
-    mats = {tp: np.zeros([4, len(attr_archs), len(attacks)]) for tp in plot.input_types}
+    mats = {tp: np.zeros([4, len(attr_archs), len(attacks)])
+            for tp in plot.input_types}
     for idx, attr_arch in enumerate(attr_archs):
         a = load_attr(attr_arch, dataset, arch, setting, attacks)
         for tp in plot.input_types:
@@ -44,7 +48,7 @@ def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
     plt.rcParams["font.serif"] = ["Times New Roman"]
 
     name = ["Kernel Size", "Activation Function", "Pruning Ratio", "All"]
-    
+
     for tp, a in mats.items():
         for i in range(4):
             dir = os.path.join('figs', save_dir, f"{tp}_{i}")
@@ -62,7 +66,8 @@ def plot_attr(attacks, attack_name, save_dir="attr_perf", annot=False):
                        fontsize=13)  # x-axis label with fontsize 15
             plt.xlabel("Attack Methods", fontsize=13)
             plt.xticks(rotation=45, ha='right')
-            plt.savefig(os.path.join(dir, f"{attack_name}_{i}.png"), bbox_inches='tight', dpi=300)
+            plt.savefig(os.path.join(
+                dir, f"{attack_name}_{i}.png"), bbox_inches='tight', dpi=300)
 
 
 if __name__ == "__main__":

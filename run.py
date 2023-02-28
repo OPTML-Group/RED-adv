@@ -265,10 +265,11 @@ if __name__ == "__main__":
         # parsing training
         # need call grep_data.py before training parsing models
         commands = []
-        # for at_arch in gargs.VALID_ATTR_ARCHS:
-        #     commands += train_parsing_commands(attr_arch=at_arch)
-        commands += train_parsing_commands(attr_arch="mlp")
         commands += train_parsing_commands(attr_arch="conv4")
+        for at_arch in gargs.VALID_ATTR_ARCHS:
+            if at_arch != "conv4":
+                commands += train_parsing_commands(attr_arch=at_arch)
+        # commands += train_parsing_commands(attr_arch="mlp")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                     suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
@@ -277,11 +278,12 @@ if __name__ == "__main__":
         # parsing cross testing
         # commands += cross_test_parsing_commands(attr_arch="attrnet")
         commands += cross_test_parsing_commands(attr_arch="conv4")
-        commands += test_parsing_commands(attr_arch="mlp")
+        # commands += test_parsing_commands(attr_arch="mlp")
     
         # parsing testing
-        # for at_arch in gargs.VALID_ATTR_ARCHS[1:]:
-        #     commands += test_parsing_commands(attr_arch=at_arch)
+        for at_arch in gargs.VALID_ATTR_ARCHS:
+            if at_arch != "conv4":
+                commands += test_parsing_commands(attr_arch=at_arch)
 
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                      suffix="commands3", shuffle=False, delay=4)
