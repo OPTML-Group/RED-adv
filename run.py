@@ -276,11 +276,11 @@ def cross_test_parsing_commands(attr_arch):
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser("train")
-    parser.add_argument('--stage', type=int)
+    parser.add_argument('--stage', type=int, help="To decide which part of commands to execute. (1, 2, 3)")
     parser.add_argument('--gpus', type=str,
-                        default="0,1,2,3,4,5,6,7", help="e.g.: --gpu 0,1,2,3")
-    parser.add_argument('--debug', action="store_true")
-    parser.add_argument('--thread', type=int, default=1)
+                        default="0,1,2,3,4,5,6,7", help="Run on which gpus. e.g.: --gpus 0,1,2,3")
+    parser.add_argument('--thread', type=int, default=1, help="Number of commands running parallel in one gpu.")
+    parser.add_argument('--debug', action="store_true", help="Only generate commands without executing if tagged.")
     args = parser.parse_args()
     debug = args.debug
     stage = args.stage
