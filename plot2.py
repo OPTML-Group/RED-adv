@@ -6,7 +6,7 @@ import seaborn as sns
 
 import plot
 import global_args as gargs
-import run
+import training_utils
 
 
 def load_attr(attr_arch, dataset, arch, setting, attacks):
@@ -18,7 +18,7 @@ def load_attr(attr_arch, dataset, arch, setting, attacks):
     for tp in plot.input_types:
         a = np.zeros([4, len(attacks)])
         for idx, atk in enumerate(attacks):
-            atk_name = run.get_attack_name(atk)
+            atk_name = training_utils.get_attack_name(atk)
             a[:3, idx] = plot.load_file(settting_dir, atk_name, atk_name, tp)
         a[3] = np.mean(a[:3], axis=0)
         mats[tp] = a

@@ -5,7 +5,7 @@ import tqdm
 import torch
 
 import global_args as gargs
-import run
+import training_utils
 
 partial_result_names = ["x_adv.pt", "delta.pt"]
 full_result_names = ["adv_all.pt", "delta_all.pt",
@@ -226,9 +226,7 @@ def grep_data_correct(dir, save_dir, robust, full_data, split):
     for idx_k, k in enumerate(ks):
         for idx_a, act in enumerate(acts):
             for idx_p, prune in enumerate(prunes):
-                dir_name = f"seed2_kernel{k}_act{act}_prune{prune}"
-                if robust:
-                    dir_name += "_robust"
+                dir_name = training_utils.get_model_name(2, k, act, prune, robust=robust)
                 dir_path = os.path.join(dir, dir_name)
                 assert _check_data_exists(dir_path, full_result_names)
                 # or (not full_data and _check_data_exists(dir_path, partial_result_names))
@@ -260,7 +258,7 @@ def grep_setting(dataset, arch, setting_name, attacks, split):
 
     output_names = output_names_split if split else output_names_no_split
     for atk in attacks:
-        atk_name = run.get_attack_name(atk)
+        atk_name = training_utils.get_attack_name(atk)
 
         grep_atk_dir = os.path.join(atk_dir, atk_name)
         grep_save_dir = os.path.join(save_dir, setting_name, atk_name)

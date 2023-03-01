@@ -2,7 +2,7 @@ import os
 
 import torch
 
-import run
+import training_utils
 import global_args as gargs
 import grep_data
 
@@ -26,7 +26,7 @@ def grep_attack(dataset, arch, setting, attacks, attack_name):
             continue
 
         for atk in attacks:
-            atk_name = run.get_attack_name(atk)
+            atk_name = training_utils.get_attack_name(atk)
             atk_dir = os.path.join(setting_dir, atk_name)
 
             path = os.path.join(atk_dir, name)
@@ -76,8 +76,12 @@ if __name__ == "__main__":
     for attacks in gargs.ALL_GROUP:
         name = attacks[0]['attack']
         grep_attack("cifar10", "resnet9", "origin", attacks, name)
+    selected_groups = [gargs.PGD_ATTACKS, gargs.PGD_L2_ATTACKS, gargs.CW_ATTACKS, gargs.ZOSIGNSGD_ATTACKS]
+    import itertools
+    selected_attacks = list(itertools.chain(*selected_groups))
+    grep_attack("cifar10", "resnet9", "origin", selected_attacks, "selected")
 
     for attack in gargs.WHITEBOX_ATTACKS:
-        attack_name = run.get_attack_name(attack)
+        attack_name = training_utils.get_attack_name(attack)
         grep_class("cifar10", "origin", attack_name, gargs.VALID_ARCHITECTURES, "full_archs")
         grep_class("cifar10", "origin", attack_name, ["resnet9", "vgg11", "resnet20s"], "partial_archs")

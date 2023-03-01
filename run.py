@@ -2,19 +2,13 @@ from utils import run_commands
 import os
 
 import global_args as gargs
+from training_utils import get_attack_name, get_model_name
 
 
 _kernels = gargs.KERNEL_SIZES
 _acts = gargs.ACTIVATION_FUNCTIONS
 _ratios = gargs.PRUNING_RATIOS
 _struct = [False]
-
-
-def get_attack_name(atk):
-    dir_name = []
-    for key, val in atk.items():
-        dir_name.append(f"{key}_{val}")
-    return '_'.join(dir_name)
 
 
 def gen_commands_victim(dataset, arch, attacks, robust):
@@ -53,12 +47,7 @@ def gen_commands_victim(dataset, arch, attacks, robust):
                         atk_path = os.path.join(_atk_dir, akt_name)
                         command += f" --attack-save-dir {atk_path}"
 
-                        model_name = "seed{}_kernel{}_act{}_prune{}".format(
-                            2, k, a, r)
-                        if s:
-                            model_name += "_struct"
-                        if robust:
-                            model_name += '_robust'
+                        model_name = get_model_name(2, k, a, r, s, robust)
 
                         path = os.path.join(
                             _model_dir, f"{model_name}_omp_2/checkpoint_75.pt")
@@ -67,8 +56,8 @@ def gen_commands_victim(dataset, arch, attacks, robust):
                             commands.append(command)
                         else:
                             if not (os.path.exists(os.path.join(atk_path, model_name, 'ori_pred.pt')) and
-                                    os.path.exists(os.path.join(atk_path, model_name, 'attack_acc.log'))):# and \
-                                    # not os.path.exists(os.path.join(atk_path, model_name, 'x_adv.pt')):
+                                    os.path.exists(os.path.join(atk_path, model_name, 'attack_acc.log'))):  # and \
+                                # not os.path.exists(os.path.join(atk_path, model_name, 'x_adv.pt')):
                                 # print(path)
                                 if idx == 0 or idx > 0 and os.path.exists(path):
                                     commands.append(command)
@@ -76,10 +65,10 @@ def gen_commands_victim(dataset, arch, attacks, robust):
 
 
 def gen_commands_parsing(exp, attr_arch):
-    dataset=exp['data']
-    arch=exp['arch']
-    setting=exp['setting']
-    attacks=exp['attacks']
+    dataset = exp['data']
+    arch = exp['arch']
+    setting = exp['setting']
+    attacks = exp['attacks']
     _data_arch_name = f"{dataset}_{arch}"
 
     _atk_dir = os.path.join(gargs.ATK_DIR, _data_arch_name)
@@ -109,23 +98,55 @@ def gen_commands_parsing(exp, attr_arch):
     return commands
 
 
+def gen_commands_large_set(dataset, arch, setting, attr_arch):
+    _data_arch_name = f"{dataset}_{arch}"
+
+    _atk_dir = os.path.join(gargs.ATK_DIR, _data_arch_name)
+    _model_dir = os.path.join(gargs.MODEL_DIR, _data_arch_name)
+    _parsing_dir = os.path.join(gargs.PARSING_DIR, attr_arch, _data_arch_name)
+    _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_name)
+    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _data_arch_name)
+
+    setting_dir = os.path.join(_grep_dir, setting)
+    attack_names = os.listdir(setting_dir)
+
+    input_types = ["delta", "x_adv"]
+
+    commands = []
+    for atk_name in attack_names:
+        for tp in input_types:
+            grep_path = os.path.join(setting_dir, atk_name)
+            output_path = os.path.join(_parsing_dir, setting, atk_name, tp)
+
+            if not os.path.exists(grep_path):
+                continue
+
+            if not os.path.exists(os.path.join(output_path, "final.pt")):
+                command = f"python main_parser.py --input_folder {grep_path} --input-type {tp} --save_folder {output_path}"
+                command += f" --attr-arch {attr_arch}"
+                command += f" --dataset {dataset}"
+                commands.append(command)
+    return commands
+
+
 def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
     if exp_model['data'] != exp_data['data']:
         return []
     if exp_model['arch'] != exp_data['arch'] and exp_model['setting'] != exp_data['setting']:
         return []
 
-    dataset=exp_model['data']
-    arch_model=exp_model['arch']
-    setting_model=exp_model['setting']
-    attacks = [atk for atk in exp_model['attacks'] if atk in exp_data['attacks']]
+    dataset = exp_model['data']
+    arch_model = exp_model['arch']
+    setting_model = exp_model['setting']
+    attacks = [atk for atk in exp_model['attacks']
+               if atk in exp_data['attacks']]
 
-    arch_data=exp_data['arch']
-    setting_data=exp_data['setting']
+    arch_data = exp_data['arch']
+    setting_data = exp_data['setting']
 
     _data_arch_model = os.path.join(f"{dataset}_{arch_model}", setting_model)
     _data_arch_data = os.path.join(f"{dataset}_{arch_data}", setting_data)
-    _log_dir = os.path.join(f"{dataset}_{arch_model}" if arch_model == arch_data else f"{dataset}_model_{arch_model}_data_{arch_data}", 
+    _log_dir = os.path.join(f"{dataset}_{arch_model}" if arch_model == arch_data else f"{dataset}_model_{arch_model}_data_{arch_data}",
                             setting_model if setting_model == setting_data else f"model_{setting_model}_data_{setting_data}")
 
     _parsing_dir = os.path.join(gargs.PARSING_DIR, attr_arch, _data_arch_model)
@@ -156,9 +177,9 @@ def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
 
 
 def gen_commands_eval_parsing(exp, attr_arch):
-    dataset=exp['data']
-    arch=exp['arch']
-    setting=exp['setting']
+    dataset = exp['data']
+    arch = exp['arch']
+    setting = exp['setting']
     attacks = exp['attacks']
 
     _data_arch_model = os.path.join(f"{dataset}_{arch}", setting)
@@ -216,6 +237,19 @@ def train_parsing_commands(attr_arch):
     return commands
 
 
+def train_large_set_parsing_commands(attr_arch):
+    commands = []
+    exps = [
+        ("cifar10", "full_archs", "origin"),
+        ("cifar10", "partial_archs", "origin"),
+        ("cifar10", "resnet9", "grouped_attack_origin"),
+    ]
+    for data, arch, setting in exps:
+        commands += gen_commands_large_set(data, arch, setting, attr_arch)
+    print("ext: ", len(commands))
+    return commands
+
+
 def test_parsing_commands(attr_arch):
     commands = []
     for exp in gargs.EXPS:
@@ -243,7 +277,8 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser("train")
     parser.add_argument('--stage', type=int)
-    parser.add_argument('--gpus', type=str, default="0,1,2,3,4,5,6,7", help="e.g.: --gpu 0,1,2,3")
+    parser.add_argument('--gpus', type=str,
+                        default="0,1,2,3,4,5,6,7", help="e.g.: --gpu 0,1,2,3")
     parser.add_argument('--debug', action="store_true")
     parser.add_argument('--thread', type=int, default=1)
     args = parser.parse_args()
@@ -260,18 +295,19 @@ if __name__ == "__main__":
 
         commands = train_victim_commands()
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
-                    ext_command=ext, suffix="commands1", shuffle=False, delay=1)
+                     ext_command=ext, suffix="commands1", shuffle=False, delay=1)
     elif stage == 2:
         # parsing training
         # need call grep_data.py before training parsing models
         commands = []
         commands += train_parsing_commands(attr_arch="conv4")
+        commands += train_large_set_parsing_commands(attr_arch="conv4")
         for at_arch in gargs.VALID_ATTR_ARCHS:
             if at_arch != "conv4":
                 commands += train_parsing_commands(attr_arch=at_arch)
         # commands += train_parsing_commands(attr_arch="mlp")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
-                    suffix="commands2", shuffle=False, delay=1)
+                     suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
         commands = []
 
@@ -279,7 +315,7 @@ if __name__ == "__main__":
         # commands += cross_test_parsing_commands(attr_arch="attrnet")
         commands += cross_test_parsing_commands(attr_arch="conv4")
         # commands += test_parsing_commands(attr_arch="mlp")
-    
+
         # parsing testing
         for at_arch in gargs.VALID_ATTR_ARCHS:
             if at_arch != "conv4":

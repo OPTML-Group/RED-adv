@@ -6,6 +6,8 @@ import pruner
 import attacks
 import os
 
+import training_utils
+
 
 def main():
     args = arg_parser.parse_args_victim_training()
@@ -29,15 +31,20 @@ def main():
     model = model.cuda()
 
     if args.dataset != 'mnist':
-        prefix = "seed{}_kernel{}_act{}_prune{}_".format(
-            args.seed, args.kernel_size, args.act_func, args.pruning_ratio)
+        prefix = training_utils.get_model_name(
+            seed=args.seed, 
+            kernel_size=args.kernel_size, 
+            activation_function=args.act_func,
+            pruning_ratio=args.pruning_ratio,
+            struct=args.structured_pruning,
+            robust=args.robust_train) + '_'
     else:
         prefix = "seed{}_conv{}_fc{}_kernel{}_act{}_prune{}_".format(
             args.seed, args.num_conv, args.num_fc, args.kernel_size, args.act_func, args.pruning_ratio)
-    if args.structured_pruning:
-        prefix += "struct_"
-    if args.robust_train:
-        prefix += "robust_"
+        if args.structured_pruning:
+            prefix += "struct_"
+        if args.robust_train:
+            prefix += "robust_"
 
     pruner.omp(model, loader, args, prefix=prefix)
 

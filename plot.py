@@ -5,7 +5,7 @@ import os
 import shutil
 
 import global_args as gargs
-import run
+import training_utils
 
 input_types = ["delta", "x_adv"]
 
@@ -64,7 +64,7 @@ def load_exp(exp_model, exp_data, attacks, attr_arch):
     _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _log_dir)
 
     n_dim = len(attacks)
-    attack_names = [run.get_attack_name(atk) for atk in attacks]
+    attack_names = [training_utils.get_attack_name(atk) for atk in attacks]
     mats = {}
 
     for tp in input_types:
