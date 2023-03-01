@@ -39,7 +39,7 @@ python run.py --stage 2 --thread 3 --gpus 0,1,2,3,4,5,6,7
 python run.py --stage 3 --thread 20 --gpus 0,1,2,3,4,5,6,7
 ```
 
-### Optional arguments in run.py
+## Optional arguments in run.py
 ```
 --stage STAGE    To decide which part of commands to execute. (1, 2, 3)
 --gpus GPUS      Run on which gpus. e.g.: --gpus 0,1,2,3
