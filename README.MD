@@ -1,25 +1,40 @@
+# RED-adv
+
+## Prepairation
+
+Change the path related arguments in [path.py](./global_args/path.py)
+
 ### TinyImageNet Preparation
 ```
 cd TinyImageNet
 bash run.sh
 ```
 
-### TinyImageNet Run
+## Pipeline
+
+### Train victim model
+```bash
+python run.py --stage 1 --thread 3 --gpu 0,1,2,3,4,5,6,7
 ```
-python main_victim.py --dataset TinyImageNet --dataset-dir TinyImageNet/tiny-imagenet-200 --num_classes 200
+TODO: split training and attacking stage.
+
+### Get attack images
+```bash
+python run.py --stage 1 --thread 3 --gpu 0,1,2,3,4,5,6,7
 ```
 
-### ZOSignSGD
-```
-CUDA_VISIBLE_DEVICES=0 python main_victim.py --kernel-size 3 --act-func relu --pruning-ratio 0.0 --tensorboard --save-dir /localscratch2/ljcc/results --attack zosignsgd --eps 8 --norm Linf --attack-save-dir /localscratch2/ljcc/attack_img/attack_zosignsgd_eps_8_norm_Linf --dataset-dir /localscratch2/tmp/cifar0
-```
-
-### ZOSGD
-```
-CUDA_VISIBLE_DEVICES=0 python main_victim.py --kernel-size 3 --act-func relu --pruning-ratio 0.0 --tensorboard --save-dir /localscratch2/ljcc/results --attack zosgd --eps 8 --norm Linf --attack-save-dir /localscratch2/ljcc/attack_img/attack_zosgd_eps_8_norm_Linf --dataset-dir /localscratch2/tmp/cifar0
+### Aggregate datas
+```bash
+python grep_data.py # for each attack strength
+python grep_class_data.py # for mixed datasets
 ```
 
-### Bandit
+### Train parsing model
+```bash
+python run.py --stage 2 --thread 3 --gpu 0,1,2,3,4,5,6,7
 ```
-CUDA_VISIBLE_DEVICES=0 python main_victim.py --kernel-size 3 --act-func relu --pruning-ratio 0.0 --tensorboard --save-dir /localscratch2/ljcc/results --attack bandit --eps 8 --norm Linf --attack-save-dir /localscratch2/ljcc/attack_img/attack_bandit_eps_8_norm_Linf --dataset-dir /localscratch2/tmp/cifar0
+
+### Evaluate parsing model
+```bash
+python run.py --stage 3 --thread 20 --gpu 0,1,2,3,4,5,6,7
 ```
