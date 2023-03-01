@@ -1,6 +1,7 @@
 import run
 import os
 import global_args as gargs
+import training_utils
 # commands = run.gen_commands_victim()
 # print(len(commands))
 # commands = run.gen_commands_old()
@@ -19,12 +20,8 @@ def get_models(dataset, arch, robust=True, omp=2):
                 for s in run._struct:
                     if r == 0.0 and s:
                         continue
-                    model_name = "seed{}_kernel{}_act{}_prune{}".format(
-                        2, k, a, r)
-                    if s:
-                        model_name += "_struct"
-                    if robust:
-                        model_name += '_robust'
+                    model_name = training_utils.get_model_name(2, k, a, r, s, robust)
+                    
                     path = os.path.join(_model_dir, f"{model_name}_omp_{omp}/checkpoint_{last_epoch}.pt")
                     # print(path)
 

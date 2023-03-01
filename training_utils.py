@@ -1,4 +1,5 @@
 import global_args as gargs
+import os
 
 
 def get_model_name(seed, kernel_size, activation_function, pruning_ratio, struct=False, robust=False):
@@ -21,3 +22,27 @@ def get_attack_name(atk):
     for key, val in atk.items():
         dir_name.append(f"{key}_{val}")
     return '_'.join(dir_name)
+
+def check_data_exists(dir, names):
+    for name in names:
+        if not os.path.exists(os.path.join(dir, name)):
+            return False
+    return True
+
+def load_datas(dir, names):
+    import torch
+    ret = []
+    for name in names:
+        path = os.path.join(dir, name)
+        item = torch.load(path)
+        ret.append(item)
+    return ret
+
+
+def save_datas(dir, names, datas):
+    assert len(names) == len(datas)
+
+    import torch
+    for name, data in zip(names, datas):
+        path = os.path.join(dir, name)
+        torch.save(data, path)

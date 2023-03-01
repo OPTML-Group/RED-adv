@@ -7,34 +7,12 @@ import torch
 import global_args as gargs
 import training_utils
 
-partial_result_names = ["x_adv.pt", "delta.pt"]
-full_result_names = ["adv_all.pt", "delta_all.pt",
-                     "adv_pred.pt", "ori_pred.pt", "targets.pt"]
-output_names_no_split = ["x_adv.pt", "delta.pt", "attr_labels.pt"]
-output_names_split = ["x_adv_train.pt", "delta_train.pt", "attr_labels_train.pt",
-                      "x_adv_test.pt", "delta_test.pt", "attr_labels_test.pt"]
-
-
-def _check_data_exists(dir, names):
-    for name in names:
-        if not os.path.exists(os.path.join(dir, name)):
-            return False
-    return True
-
-
-def _load_datas(dir, names):
-    ret = []
-    for name in names:
-        path = os.path.join(dir, name)
-        item = torch.load(path)
-        ret.append(item)
-    return ret
-
-
-def _save_datas(dir, names, datas):
-    for name, data in zip(names, datas):
-        path = os.path.join(dir, name)
-        torch.save(data, path)
+# partial_result_names = ["x_adv.pt", "delta.pt"]
+# full_result_names = ["adv_all.pt", "delta_all.pt",
+#                      "adv_pred.pt", "ori_pred.pt", "targets.pt"]
+# output_names_no_split = ["x_adv.pt", "delta.pt", "attr_labels.pt"]
+# output_names_split = ["x_adv_train.pt", "delta_train.pt", "attr_labels_train.pt",
+#                       "x_adv_test.pt", "delta_test.pt", "attr_labels_test.pt"]
 
 
 def _check_datas(datas, after=False, log_path=None):
@@ -72,9 +50,9 @@ def _backup(dir):
 
 
 def clean_up_result(dir_path):
-    if _check_data_exists(dir_path, full_result_names):
+    if training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES):
         print(f"Check '{dir_path}'")
-        datas = _load_datas(dir_path, full_result_names)
+        datas = training_utils.load_datas(dir_path, gargs.FULL_RESULT_NAMES)
         _check_datas(datas)
         for idx, data in enumerate(datas):
             datas[idx] = data.detach()
@@ -87,14 +65,14 @@ def clean_up_result(dir_path):
 
         # over write!!! careful!!!!
         _backup(dir_path)
-        _save_datas(dir_path, full_result_names, datas)
+        training_utils.save_datas(dir_path, gargs.FULL_RESULT_NAMES, datas)
 
         print(f"Check '{dir_path}'")
-        datas = _load_datas(dir_path, full_result_names)
+        datas = training_utils.load_datas(dir_path, gargs.FULL_RESULT_NAMES)
         _check_datas(datas, after=True, log_path=os.path.join(
             dir_path, 'attack_acc.log'))
         print(f"Check '{dir_path}' success")
-        for name in partial_result_names:
+        for name in gargs.PARTIAL_RESULT_NAMES:
             path = os.path.join(dir_path, name)
             if os.path.exists(path):
                 if False:
@@ -161,7 +139,7 @@ def process_full_result(x_adv, delta, adv_pred, ori_pred, target, full):
 
 
 def grep_from_full_result(dir_path, full, split):
-    datas = _load_datas(dir_path, full_result_names)
+    datas = training_utils.load_datas(dir_path, gargs.FULL_RESULT_NAMES)
     _check_datas(datas, after=True, log_path=os.path.join(
         dir_path, 'attack_acc.log'))
     _check_data_order(datas, dir_path)
@@ -174,7 +152,7 @@ def grep_from_full_result(dir_path, full, split):
 
 
 def grep_from_partial_result(dir_path):
-    datas = _load_datas(dir_path, partial_result_names)
+    datas = training_utils.load_datas(dir_path, gargs.PARTIAL_RESULT_NAMES)
     _check_datas(datas)
     return datas
 
@@ -200,14 +178,14 @@ def _concat_and_save_patch(save_dir, datas, names):
 
 def _concat_and_save(save_dir, datas, split):
     if not split:
-        _concat_and_save_patch(save_dir, datas[0], output_names_no_split)
+        _concat_and_save_patch(save_dir, datas[0], gargs.NO_SPLIT_OUTPUT_NAMES)
     else:
-        _concat_and_save_patch(save_dir, datas[0], output_names_split[:3])
-        _concat_and_save_patch(save_dir, datas[1], output_names_split[3:])
+        _concat_and_save_patch(save_dir, datas[0], gargs.SPLIT_OUTPUT_NAMES[:3])
+        _concat_and_save_patch(save_dir, datas[1], gargs.SPLIT_OUTPUT_NAMES[3:])
 
 
 def load_dir_data(dir_path, full, split):
-    if split or full or _check_data_exists(dir_path, full_result_names):
+    if split or full or training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES):
         return grep_from_full_result(dir_path, full, split)
     else:
         raise NotImplementedError("No partial!!!!")
@@ -228,8 +206,8 @@ def grep_data_correct(dir, save_dir, robust, full_data, split):
             for idx_p, prune in enumerate(prunes):
                 dir_name = training_utils.get_model_name(2, k, act, prune, robust=robust)
                 dir_path = os.path.join(dir, dir_name)
-                assert _check_data_exists(dir_path, full_result_names)
-                # or (not full_data and _check_data_exists(dir_path, partial_result_names))
+                assert training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES)
+                # or (not full_data and training_utils.check_data_exists(dir_path, gargs.PARTIAL_RESULT_NAMES))
                 dirs.append(dir_path)
                 lbs.append([idx_k, idx_a, idx_p])
 
@@ -256,14 +234,14 @@ def grep_setting(dataset, arch, setting_name, attacks, split):
     robust = "robust" in setting_name
     full = "all" in setting_name
 
-    output_names = output_names_split if split else output_names_no_split
+    output_names = gargs.SPLIT_OUTPUT_NAMES if split else gargs.NO_SPLIT_OUTPUT_NAMES
     for atk in attacks:
         atk_name = training_utils.get_attack_name(atk)
 
         grep_atk_dir = os.path.join(atk_dir, atk_name)
         grep_save_dir = os.path.join(save_dir, setting_name, atk_name)
 
-        if _check_data_exists(grep_save_dir, output_names):
+        if training_utils.check_data_exists(grep_save_dir, output_names):
             continue
 
         print(f"Grep from: '{grep_atk_dir}'")

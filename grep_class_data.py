@@ -4,7 +4,6 @@ import torch
 
 import training_utils
 import global_args as gargs
-import grep_data
 
 
 def check_group(group, atks):
@@ -18,7 +17,7 @@ def grep_attack(dataset, arch, setting, attacks, attack_name):
 
     os.makedirs(save_dir, exist_ok=True)
 
-    for name in grep_data.output_names_split:
+    for name in gargs.SPLIT_OUTPUT_NAMES:
         items = []
 
         save_path = os.path.join(save_dir, name)
@@ -46,7 +45,7 @@ def grep_class(dataset, setting, attack_name, model_archs, archs_name):
         gargs.GREP_DIR, f"{dataset}_{archs_name}", setting, attack_name)
     os.makedirs(save_dir, exist_ok=True)
 
-    for name in grep_data.output_names_split:
+    for name in gargs.SPLIT_OUTPUT_NAMES:
         save_path = os.path.join(save_dir, name)
         if os.path.exists(save_path):
             print(f"{save_path} exists!")
