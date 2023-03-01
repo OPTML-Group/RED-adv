@@ -1,5 +1,6 @@
 import global_args as gargs
 import os
+import shutil
 
 
 def get_model_name(seed, kernel_size, activation_function, pruning_ratio, struct=False, robust=False):
@@ -23,11 +24,13 @@ def get_attack_name(atk):
         dir_name.append(f"{key}_{val}")
     return '_'.join(dir_name)
 
+
 def check_data_exists(dir, names):
     for name in names:
         if not os.path.exists(os.path.join(dir, name)):
             return False
     return True
+
 
 def load_datas(dir, names):
     import torch
@@ -46,3 +49,8 @@ def save_datas(dir, names, datas):
     for name, data in zip(names, datas):
         path = os.path.join(dir, name)
         torch.save(data, path)
+
+
+def backup(dir):
+    shutil.rmtree('./temp', ignore_errors=True)
+    os.system(f"cp -r {dir} ./temp")

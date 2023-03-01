@@ -7,13 +7,6 @@ import torch
 import global_args as gargs
 import training_utils
 
-# partial_result_names = ["x_adv.pt", "delta.pt"]
-# full_result_names = ["adv_all.pt", "delta_all.pt",
-#                      "adv_pred.pt", "ori_pred.pt", "targets.pt"]
-# output_names_no_split = ["x_adv.pt", "delta.pt", "attr_labels.pt"]
-# output_names_split = ["x_adv_train.pt", "delta_train.pt", "attr_labels_train.pt",
-#                       "x_adv_test.pt", "delta_test.pt", "attr_labels_test.pt"]
-
 
 def _check_datas(datas, after=False, log_path=None):
     n_items = datas[0].shape[0]
@@ -44,9 +37,6 @@ def _check_datas(datas, after=False, log_path=None):
                 assert pred.ndim == 1 or pred.ndim == 2 and pred.shape[1] == 10
 
 
-def _backup(dir):
-    shutil.rmtree('./temp', ignore_errors=True)
-    os.system(f"cp -r {dir} ./temp")
 
 
 def clean_up_result(dir_path):
@@ -64,7 +54,7 @@ def clean_up_result(dir_path):
             dir_path, 'attack_acc.log'))
 
         # over write!!! careful!!!!
-        _backup(dir_path)
+        training_utils.backup(dir_path)
         training_utils.save_datas(dir_path, gargs.FULL_RESULT_NAMES, datas)
 
         print(f"Check '{dir_path}'")
@@ -180,8 +170,10 @@ def _concat_and_save(save_dir, datas, split):
     if not split:
         _concat_and_save_patch(save_dir, datas[0], gargs.NO_SPLIT_OUTPUT_NAMES)
     else:
-        _concat_and_save_patch(save_dir, datas[0], gargs.SPLIT_OUTPUT_NAMES[:3])
-        _concat_and_save_patch(save_dir, datas[1], gargs.SPLIT_OUTPUT_NAMES[3:])
+        _concat_and_save_patch(
+            save_dir, datas[0], gargs.SPLIT_OUTPUT_NAMES[:3])
+        _concat_and_save_patch(
+            save_dir, datas[1], gargs.SPLIT_OUTPUT_NAMES[3:])
 
 
 def load_dir_data(dir_path, full, split):
@@ -204,9 +196,11 @@ def grep_data_correct(dir, save_dir, robust, full_data, split):
     for idx_k, k in enumerate(ks):
         for idx_a, act in enumerate(acts):
             for idx_p, prune in enumerate(prunes):
-                dir_name = training_utils.get_model_name(2, k, act, prune, robust=robust)
+                dir_name = training_utils.get_model_name(
+                    2, k, act, prune, robust=robust)
                 dir_path = os.path.join(dir, dir_name)
-                assert training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES)
+                assert training_utils.check_data_exists(
+                    dir_path, gargs.FULL_RESULT_NAMES)
                 # or (not full_data and training_utils.check_data_exists(dir_path, gargs.PARTIAL_RESULT_NAMES))
                 dirs.append(dir_path)
                 lbs.append([idx_k, idx_a, idx_p])
