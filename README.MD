@@ -10,6 +10,9 @@ cd TinyImageNet
 bash run.sh
 ```
 
+### Pretrained DnCNN download
+The pretrained DnCNN model is in [GoogleDrive](https://drive.google.com/file/d/1xZCmviKXxULit0dEyekhXs32waEc00Qa/view).
+
 ## Pipeline
 
 ### Train victim model
