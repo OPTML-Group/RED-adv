@@ -11,7 +11,7 @@ def get_img(path):
     x_adv, delta, adv_pred, ori_pred, target = datas
     idx = 8000
     while idx < 10000:
-        while idx < 10000 and adv_pred[idx] == target[idx] or ori_pred[idx] != target[idx]:
+        while idx < 10000 and (adv_pred[idx] == target[idx] or ori_pred[idx] != target[idx]):
             idx += 1
         if idx == 10000:
             break
