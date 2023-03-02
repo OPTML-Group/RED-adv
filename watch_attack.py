@@ -79,3 +79,4 @@ for exp1 in gargs.EXPS[:5]:
         cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, "conv4")
         cnt += len(cmds)
 print("conv4", cnt)
+run.train_large_set_parsing_commands(attr_arch="conv4")
