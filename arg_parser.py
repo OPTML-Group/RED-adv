@@ -82,15 +82,15 @@ def attack_args(parser):
     parser.add_argument('--cw-kappa', type=float, default=0)
 
 
-def parse_args_model_parsing():
-    parser = argparse.ArgumentParser(
-        description='Model Parsing Experiments')
-    parser.add_argument('--input-type', type=str, default="delta",
-                        choices=["delta", "x_adv"], help='input type')
-    general_args(parser)
-    training_args(parser)
+# def parse_args_model_parsing():
+#     parser = argparse.ArgumentParser(
+#         description='Model Parsing Experiments')
+#     parser.add_argument('--input-type', type=str, default="delta",
+#                         choices=["delta", "x_adv"], help='input type')
+#     general_args(parser)
+#     training_args(parser)
 
-    return parser.parse_args()
+#     return parser.parse_args()
 
 
 def parse_args_victim_training():
@@ -100,5 +100,26 @@ def parse_args_victim_training():
     pruning_args(parser)
     model_args(parser)
     attack_args(parser)
+
+    return parser.parse_args()
+
+def parse_args_model_parsing(train):
+    parser = argparse.ArgumentParser(description='train clf')
+
+    parser.add_argument('--seed', type=int, default=0)
+    parser.add_argument('--lr', type=float, default=0.1)
+    parser.add_argument('--batch_size', type=int, default=512)
+    parser.add_argument('--epochs', type=int, default=100)
+
+    parser.add_argument('--input_folder', type=str)
+    parser.add_argument('--dataset', type=str, default='cifar10')
+    parser.add_argument('--attack', type=str, default='PGD_eps8_alpha1_steps10')
+    parser.add_argument('--input-type', type=str, default='delta', choices=['x_adv', 'delta', 'denoise'])
+    parser.add_argument('--save_folder', type=str)
+    parser.add_argument('--attr-arch', type=str, choices=gargs.VALID_ATTR_ARCHS)
+
+    # test
+    if not train:
+        parser.add_argument('--log_dir', type=str, default=None)
 
     return parser.parse_args()
