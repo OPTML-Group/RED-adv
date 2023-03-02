@@ -59,7 +59,7 @@ def grep_class(dataset, setting, attack_name, model_archs, archs_name):
             path = os.path.join(attack_dir, name)
             print(f"Load from {path}.")
             item = torch.load(path)
-            if name == "attr_labels.pt":
+            if "attr_labels" in name:
                 item = torch.cat(
                     [item, torch.zeros(item.shape[0], 1, dtype=int) + idx_arch], axis=1).detach().long()
             items.append(item)
