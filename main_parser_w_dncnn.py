@@ -11,7 +11,7 @@ from tqdm import tqdm
 import argparse
 import os
 
-from models.dncnn import DnCNN
+from attr_models.dncnn import DnCNN
 
 parser = argparse.ArgumentParser(description='train clf')
 
