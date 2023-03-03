@@ -220,7 +220,7 @@ def main():
                 args.save_folder, "best.pt"))
             if denoiser:
                 torch.save(denoiser.state_dict(), os.path.join(
-                    args.save_folder, "best.pt"))
+                    args.save_folder, "denoiser_best.pt"))
 
         test_print = ", ".join("{:.2f}".format(x) for x in test_acc)
 
