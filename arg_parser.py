@@ -118,6 +118,17 @@ def parse_args_model_parsing(train):
     parser.add_argument('--save_folder', type=str)
     parser.add_argument('--attr-arch', type=str, choices=gargs.VALID_ATTR_ARCHS)
 
+    parser.add_argument('--denoiser_pretrain_epoch', type=int, default=20)
+    parser.add_argument('--denoiser_pretrain_lr', type=float, default=1e-2)
+    parser.add_argument('--cotrain_epoch', type=int, default=50)
+    parser.add_argument('--denoiser_cotrain_lr', type=float, default=1e-5)
+    parser.add_argument('--parser_cotrain_lr', type=float, default=1e-3)
+    # parser.add_argument('--lambda1', type=float, default=15,
+    #                     help='the coefficient of attribution loss')
+    parser.add_argument('--gamma1', type=float, default=1,
+                        help='the coefficient of mae loss')
+    parser.add_argument('--pretrained-denoiser-path', type=str, default='./pretrained_models/DO.pth.tar',
+                        help='Path to a denoiser ')
     # test
     if not train:
         parser.add_argument('--log_dir', type=str, default=None)

@@ -3,6 +3,7 @@ from .conv2 import AttrNet, ConvNet2
 from .conv4 import ConvNet4
 from .resnset9 import ResNet9
 from .mlp import MLP
+from .dncnn import DnCNN
 
 def get_model(name, num_channel, num_class, num_output, img_size):
     if name == "mlp":

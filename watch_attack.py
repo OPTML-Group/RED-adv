@@ -80,3 +80,7 @@ for exp1 in gargs.EXPS[:5]:
         cnt += len(cmds)
 print("conv4", cnt)
 run.train_large_set_parsing_commands(attr_arch="conv4")
+
+commands = run.gen_commands_parsing(gargs.EXPS[0], "conv4", "denoise")
+print(f"denoise: {len(commands)}")
+run.train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")

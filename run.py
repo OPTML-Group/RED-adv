@@ -9,6 +9,7 @@ _kernels = gargs.KERNEL_SIZES
 _acts = gargs.ACTIVATION_FUNCTIONS
 _ratios = gargs.PRUNING_RATIOS
 _struct = [False]
+_input_types = ["delta", "x_adv"]
 
 
 def gen_commands_victim(dataset, arch, attacks, robust):
@@ -64,7 +65,7 @@ def gen_commands_victim(dataset, arch, attacks, robust):
     return commands
 
 
-def gen_commands_parsing(exp, attr_arch):
+def gen_commands_parsing(exp, attr_arch, specific_type=None):
     dataset = exp['data']
     arch = exp['arch']
     setting = exp['setting']
@@ -77,7 +78,7 @@ def gen_commands_parsing(exp, attr_arch):
     _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_name)
     _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _data_arch_name)
 
-    input_types = ["delta", "x_adv"]
+    input_types = [specific_type] if specific_type else _input_types
 
     commands = []
     for atk in attacks:
@@ -98,7 +99,7 @@ def gen_commands_parsing(exp, attr_arch):
     return commands
 
 
-def gen_commands_large_set(dataset, arch, setting, attr_arch):
+def gen_commands_large_set(dataset, arch, setting, attr_arch, specific_type=None):
     _data_arch_name = f"{dataset}_{arch}"
 
     _atk_dir = os.path.join(gargs.ATK_DIR, _data_arch_name)
@@ -110,7 +111,7 @@ def gen_commands_large_set(dataset, arch, setting, attr_arch):
     setting_dir = os.path.join(_grep_dir, setting)
     attack_names = os.listdir(setting_dir)
 
-    input_types = ["delta", "x_adv"]
+    input_types = [specific_type] if specific_type else _input_types
 
     commands = []
     for atk_name in attack_names:
@@ -129,7 +130,7 @@ def gen_commands_large_set(dataset, arch, setting, attr_arch):
     return commands
 
 
-def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
+def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch, specific_type=None):
     if exp_model['data'] != exp_data['data']:
         return []
     if exp_model['arch'] != exp_data['arch'] and exp_model['setting'] != exp_data['setting']:
@@ -153,7 +154,7 @@ def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
     _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_data)
     _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _log_dir)
 
-    input_types = ["delta", "x_adv"]
+    input_types = [specific_type] if specific_type else _input_types
 
     commands = []
     for tp in input_types:
@@ -176,7 +177,7 @@ def gen_commands_eval_parsing_cross(exp_model, exp_data, attr_arch):
     return commands
 
 
-def gen_commands_eval_parsing(exp, attr_arch):
+def gen_commands_eval_parsing(exp, attr_arch, specific_type=None):
     dataset = exp['data']
     arch = exp['arch']
     setting = exp['setting']
@@ -190,7 +191,7 @@ def gen_commands_eval_parsing(exp, attr_arch):
     _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_data)
     _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _log_dir)
 
-    input_types = ["delta", "x_adv"]
+    input_types = [specific_type] if specific_type else _input_types
 
     commands = []
     for tp in input_types:
@@ -226,18 +227,18 @@ def train_victim_commands():
     return commands
 
 
-def train_parsing_commands(attr_arch):
+def train_parsing_commands(attr_arch, specific_type = None):
     commands = []
     if attr_arch not in ['conv4']:
-        commands += gen_commands_parsing(gargs.EXPS[0], attr_arch)
+        commands += gen_commands_parsing(gargs.EXPS[0], attr_arch, specific_type)
     else:
         for exp in gargs.EXPS:
-            commands += gen_commands_parsing(exp, attr_arch)
+            commands += gen_commands_parsing(exp, attr_arch, specific_type)
     print(len(commands))
     return commands
 
 
-def train_large_set_parsing_commands(attr_arch):
+def train_large_set_parsing_commands(attr_arch, specific_type = None):
     commands = []
     exps = [
         ("cifar10", "full_archs", "origin"),
@@ -245,7 +246,7 @@ def train_large_set_parsing_commands(attr_arch):
         ("cifar10", "resnet9", "grouped_attack_origin"),
     ]
     for data, arch, setting in exps:
-        commands += gen_commands_large_set(data, arch, setting, attr_arch)
+        commands += gen_commands_large_set(data, arch, setting, attr_arch, specific_type)
     print("ext: ", len(commands))
     return commands
 
@@ -306,6 +307,9 @@ if __name__ == "__main__":
             if at_arch != "conv4":
                 commands += train_parsing_commands(attr_arch=at_arch)
         # commands += train_parsing_commands(attr_arch="mlp")
+        print("denoise")
+        commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
+        commands += gen_commands_parsing(gargs.EXPS[0], "conv4", "denoise")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                      suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
