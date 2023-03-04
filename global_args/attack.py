@@ -19,12 +19,13 @@ FGSM_ATTACKS = [
     {'attack': 'fgsm', "eps": 16},
 ]
 CW_ATTACKS = [
+    {'attack': 'cw', "cw-c": 0.1, "cw-kappa": 0},
     {'attack': 'cw', "cw-c": 1, "cw-kappa": 0},
-    {'attack': 'cw', "cw-c": 1, "cw-kappa": 0.1},
-    {'attack': 'cw', "cw-c": 1, "cw-kappa": 1},
     {'attack': 'cw', "cw-c": 10, "cw-kappa": 0},
-    {'attack': 'cw', "cw-c": 10, "cw-kappa": 0.1},
-    {'attack': 'cw', "cw-c": 10, "cw-kappa": 1},
+
+    # {'attack': 'cw', "cw-c": 10, "cw-kappa": 0},
+    # {'attack': 'cw', "cw-c": 10, "cw-kappa": 0.1},
+    # {'attack': 'cw', "cw-c": 10, "cw-kappa": 1},
     # {'attack': 'cw', "cw-c": 100, "cw-kappa": 0},
     # {'attack': 'cw', "cw-c": 100, "cw-kappa": 0.1},
     # {'attack': 'cw', "cw-c": 100, "cw-kappa": 1},
