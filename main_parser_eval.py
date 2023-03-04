@@ -1,13 +1,8 @@
-from IPython import embed
-from torch.utils.data import Dataset, DataLoader
-
 import torch
-from torch.cuda.amp import autocast 
 
 import os
 
 import attr_models
-import global_args as gargs
 import arg_parser
 import main_parser
 
@@ -24,9 +19,21 @@ def main():
     print(f"class num: {n_class}, output num: {n_output}")
 
     assert os.path.exists(os.path.join(args.save_folder, "final.pt"))
-    model.load_state_dict(torch.load(os.path.join(args.save_folder, "best.pt")), strict=False)
 
-    test_acc = main_parser.validate(model, test_dl)
+    suffix = "best"
+    denoiser = None
+
+    if args.input_type == "denoise":
+        suffix = "final"
+        denoiser = attr_models.DnCNN(
+            image_channels=3, depth=17, n_channels=64).cuda()
+        denoiser_path = os.path.join(args.save_folder, f"denoiser_{suffix}.pt")
+        assert os.path.exists(denoiser_path)
+        denoiser.load_state_dict(torch.load(denoiser_path))
+        
+    model.load_state_dict(torch.load(os.path.join(args.save_folder, f"{suffix}.pt")))
+
+    test_acc = main_parser.validate(model, test_dl, denoiser)
 
     name1 = os.path.basename(args.input_folder)
     name2 = os.path.basename(args.save_folder)
