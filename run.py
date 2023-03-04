@@ -308,8 +308,8 @@ if __name__ == "__main__":
                 commands += train_parsing_commands(attr_arch=at_arch)
         # commands += train_parsing_commands(attr_arch="mlp")
         print("denoise")
-        commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
         commands += gen_commands_parsing(gargs.EXPS[0], "conv4", "denoise")
+        commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                      suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
