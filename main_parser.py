@@ -188,15 +188,17 @@ def main():
         d_scheduler = CosineAnnealingLR(d_optimizer, T_max=args.cotrain_epoch)
         d_criterion = torch.nn.L1Loss(
             size_average=None, reduce=None, reduction='mean')
+        n_epochs = args.cotrain_epoch
     else:
         optimizer = optim.SGD(model.parameters(), lr=args.lr)
         scheduler = CosineAnnealingLR(optimizer, T_max=args.epochs)
         criterion = torch.nn.CrossEntropyLoss()
+        n_epochs = args.epochs
 
     best_acc = 0
     best_epoch = 0
 
-    for i in range(args.cotrain_epoch):
+    for i in range(n_epochs):
         print(f"Epoch: {i}", file=fout)
         train_acc, train_loss = train_epoch(model, train_dl, criterion, optimizer,
                                             denoiser, d_criterion, d_optimizer, args.gamma1)
