@@ -13,10 +13,10 @@ def main():
     # test data
     test_dl = main_parser.get_data(args, train=False)
 
-    n_class = test_dl.dataset.tensors[1].max() + 1
-    n_output = test_dl.dataset.tensors[1].shape[1]
-    model = main_parser.get_model(args, n_class, n_output)
+    n_class = test_dl.dataset.tensors[-1].max() + 1
+    n_output = test_dl.dataset.tensors[-1].shape[1]
     print(f"class num: {n_class}, output num: {n_output}")
+    model = main_parser.get_model(args, n_class, n_output)
 
     assert os.path.exists(os.path.join(args.save_folder, "final.pt"))
 

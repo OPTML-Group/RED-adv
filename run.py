@@ -214,6 +214,50 @@ def gen_commands_eval_parsing(exp, attr_arch, specific_type=None):
     return commands
 
 
+def gen_commands_large_set_test(dataset, arch, setting, attr_arch, specific_type=None):
+    _data_arch_name = f"{dataset}_{arch}"
+
+    _parsing_dir = os.path.join(gargs.PARSING_DIR, attr_arch, _data_arch_name, setting)
+    _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_name, setting)
+    _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _data_arch_name, setting)
+
+    attack_names = os.listdir(_grep_dir)
+
+    input_types = [specific_type] if specific_type else _input_types
+
+    commands = []
+    for tp in input_types:
+        for data_atk_name in attack_names:
+            for model_atk_name in attack_names:
+                atk_path = os.path.join(_grep_dir, data_atk_name)
+                output_path = os.path.join(
+                    _parsing_dir, model_atk_name, tp)
+                log_dir = os.path.join(_log_dir)
+
+                command = f"python main_parser_eval.py --input_folder {atk_path} --input-type {tp} --save_folder {output_path} --log_dir {log_dir}"
+                command += f" --attr-arch {attr_arch}"
+                command += f" --dataset {dataset}"
+
+                if os.path.exists(os.path.join(output_path, 'final.pt')) and os.path.exists(atk_path):
+                    if not os.path.exists(os.path.join(log_dir, f"data_{data_atk_name}___model_{model_atk_name}__{tp}.log")):
+                        commands.append(command)
+    # commands = []
+    # for atk_name in attack_names:
+    #     for tp in input_types:
+    #         grep_path = os.path.join(setting_dir, atk_name)
+    #         output_path = os.path.join(_parsing_dir, setting, atk_name, tp)
+
+    #         if not os.path.exists(grep_path):
+    #             continue
+
+    #         if not os.path.exists(os.path.join(output_path, "final.pt")):
+    #             command = f"python main_parser.py --input_folder {grep_path} --input-type {tp} --save_folder {output_path}"
+    #             command += f" --attr-arch {attr_arch}"
+    #             command += f" --dataset {dataset}"
+    #             commands.append(command)
+    return commands
+
+
 def train_victim_commands():
     commands = []
     for exp in gargs.EXPS:
@@ -250,6 +294,17 @@ def train_large_set_parsing_commands(attr_arch, specific_type = None):
     print("ext: ", len(commands))
     return commands
 
+def test_large_set_parsing_commands(attr_arch, specific_type = None):
+    commands = []
+    exps = [
+        ("cifar10", "full_archs", "origin"),
+        ("cifar10", "partial_archs", "origin"),
+        ("cifar10", "resnet9", "grouped_attack_origin"),
+    ]
+    for data, arch, setting in exps:
+        commands += gen_commands_large_set_test(data, arch, setting, attr_arch, specific_type)
+    print("ext: ", len(commands))
+    return commands
 
 def test_parsing_commands(attr_arch):
     commands = []
@@ -259,17 +314,17 @@ def test_parsing_commands(attr_arch):
     return commands
 
 
-def cross_test_parsing_commands(attr_arch):
+def cross_test_parsing_commands(attr_arch, specific_type=None):
     commands = []
     for exp1 in gargs.EXPS[:5]:
         for exp2 in gargs.EXPS[:5]:
-            commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch)
+            commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch, specific_type)
     exp1 = gargs.EXPS[0]
     for exp2 in gargs.EXPS[5:]:
-        commands += gen_commands_eval_parsing_cross(exp2, exp2, attr_arch)
+        commands += gen_commands_eval_parsing_cross(exp2, exp2, attr_arch, specific_type)
     for exp2 in gargs.EXPS[5:]:
-        commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch)
-        commands += gen_commands_eval_parsing_cross(exp2, exp1, attr_arch)
+        commands += gen_commands_eval_parsing_cross(exp1, exp2, attr_arch, specific_type)
+        commands += gen_commands_eval_parsing_cross(exp2, exp1, attr_arch, specific_type)
     print(len(commands))
     return commands
 
@@ -282,6 +337,7 @@ if __name__ == "__main__":
                         default="0,1,2,3,4,5,6,7", help="Run on which gpus. e.g.: --gpus 0,1,2,3")
     parser.add_argument('--thread', type=int, default=1, help="Number of commands running parallel in one gpu.")
     parser.add_argument('--debug', action="store_true", help="Only generate commands without executing if tagged.")
+    parser.add_argument('--denoise', action="store_true")
     args = parser.parse_args()
     debug = args.debug
     stage = args.stage
@@ -307,9 +363,11 @@ if __name__ == "__main__":
             if at_arch != "conv4":
                 commands += train_parsing_commands(attr_arch=at_arch)
         # commands += train_parsing_commands(attr_arch="mlp")
-        print("denoise")
-        commands += gen_commands_parsing(gargs.EXPS[0], "conv4", "denoise")
-        commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
+        if args.denoise:
+            commands = []
+            print("denoise")
+            commands += train_parsing_commands("conv4", "denoise")
+            # commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                      suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:
@@ -324,6 +382,15 @@ if __name__ == "__main__":
         for at_arch in gargs.VALID_ATTR_ARCHS:
             if at_arch != "conv4":
                 commands += test_parsing_commands(attr_arch=at_arch)
+        commands += test_large_set_parsing_commands(attr_arch="conv4")
+
+        if args.denoise:
+            commands = []
+            print("denoise")
+            # commands += gen_commands_eval_parsing_cross(gargs.EXPS[0], gargs.EXPS[0], "conv4", "denoise")
+            # print(len(commands))
+            commands += cross_test_parsing_commands("conv4", "denoise")
+            commands += test_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
 
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
-                     suffix="commands3", shuffle=False, delay=4)
+                     suffix="commands3", shuffle=False, delay=2)
