@@ -74,6 +74,8 @@ def grep_class(dataset, setting, attack_name, model_archs, archs_name):
 if __name__ == "__main__":
     for attacks in gargs.ALL_GROUP:
         name = attacks[0]['attack']
+        if attacks[0].get('norm') == "L2":
+            name += 'l2'
         grep_attack("cifar10", "resnet9", "origin", attacks, name)
     selected_groups = [gargs.PGD_ATTACKS, gargs.PGD_L2_ATTACKS, gargs.CW_ATTACKS, gargs.ZOSIGNSGD_ATTACKS]
     import itertools
