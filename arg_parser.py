@@ -129,6 +129,7 @@ def parse_args_model_parsing(train):
                         help='the coefficient of mae loss')
     parser.add_argument('--pretrained-denoiser-path', type=str, default='./pretrained_models/DO.pth.tar',
                         help='Path to a denoiser ')
+    parser.add_argument('--not-load-to-cuda', action="store_true")
     # test
     if not train:
         parser.add_argument('--log_dir', type=str, default=None)

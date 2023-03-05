@@ -29,10 +29,12 @@ def get_data(args, train):
         prefixes = [args.input_type, "attr_labels"]
 
     datas = [torch.load(os.path.join(
-        args.input_folder, f"{prefix}_{suffix}.pt")).detach().cuda() for prefix in prefixes]
+        args.input_folder, f"{prefix}_{suffix}.pt")).detach() for prefix in prefixes]
+    if not args.not_load_to_cuda:
+        datas = [data.cuda() for data in datas]
     dataset = torch.utils.data.TensorDataset(*datas)
     dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=args.batch_size, shuffle=train)
+        dataset, batch_size=args.batch_size, shuffle=train, pin_memory=args.not_load_to_cuda)
     for data in datas:
         print(data.shape)
     return dataloader
@@ -143,8 +145,9 @@ def main():
         item = torch.load(args.pretrained_denoiser_path)
         denoiser.load_state_dict(item['state_dict'])
 
+        assert os.path.exists(os.path.join(os.path.dirname(args.save_folder), "delta", "final.pt"))
+        
         pretrain_attr_path = os.path.join(os.path.dirname(args.save_folder), "delta", "best.pt")
-        assert os.path.exists(pretrain_attr_path)
         item = torch.load(pretrain_attr_path)
         model.load_state_dict(item)
     else:
