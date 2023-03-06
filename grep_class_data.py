@@ -52,6 +52,19 @@ def grep_class(dataset, setting, attack_name, model_archs, archs_name):
             continue
         print(f"Dump to {save_path}.")
 
+        flag = True
+        for idx_arch, arch in enumerate(model_archs):
+            attack_dir = os.path.join(
+                gargs.GREP_DIR, f"{dataset}_{arch}", setting, attack_name)
+            path = os.path.join(attack_dir, name)
+            if not os.path.exists(path):
+                flag = False
+                print(f"{path} does not exists!")
+                break
+
+        if not flag:
+            continue
+
         items = []
         for idx_arch, arch in enumerate(model_archs):
             attack_dir = os.path.join(
@@ -86,4 +99,4 @@ if __name__ == "__main__":
         for attack in gargs.WHITEBOX_ATTACKS:
             attack_name = training_utils.get_attack_name(attack)
             grep_class(data, "origin", attack_name, gargs.VALID_ARCHITECTURES, "full_archs")
-            grep_class(data, "origin", attack_name, ["resnet9", "vgg11", "resnet20s"], "partial_archs")
+            # grep_class(data, "origin", attack_name, ["resnet9", "vgg11", "resnet20s"], "partial_archs")
