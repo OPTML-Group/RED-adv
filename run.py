@@ -393,7 +393,7 @@ if __name__ == "__main__":
                      ext_command=ext, suffix="commands0", shuffle=False, delay=1)
     elif stage == 1:
         # victim training
-        ext = f" --ffcv-dir {gargs.FFCV_FORMAT}"
+        ext = f" --ffcv-dir {gargs.FFCV_FORMAT}_1"
 
         commands = attack_victim_commands()
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
