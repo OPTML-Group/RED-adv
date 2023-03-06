@@ -18,10 +18,10 @@ def conv(args, channels_in, channels_out, kernel_size=3, stride=1, padding= 0,  
                          groups=groups, bias=False, dilation=dilation)
 
 class VGG(nn.Module):
-    def __init__(self, args, vgg_name):
+    def __init__(self, args, vgg_name, num_classes):
         super(VGG, self).__init__()
         self.features = self._make_layers(args, cfg[vgg_name])
-        self.classifier = nn.Linear(512, 10)
+        self.classifier = nn.Linear(512, num_classes)
 
     def forward(self, x):
         out = self.features(x)

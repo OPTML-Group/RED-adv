@@ -23,21 +23,22 @@ def _get_exps():
     # default
     exp_combs = [dict(
         arch=default_arch,
-        data=default_data,
+        data=datasets[0],
         setting=default_setting,
         attacks=_atk.ALL_ATTACKS
     )]
     # arch ablation
-    for arch in archs[1:]:
-        if arch == 'lenet':
-            continue
-        s = dict(
-            arch=arch,
-            data=default_data,
-            setting=default_setting,
-            attacks=_atk.WHITEBOX_ATTACKS
-        )
-        exp_combs.append(s)
+    for data in datasets[:2]:
+        for arch in archs[1:]:
+            if arch == 'lenet':
+                continue
+            s = dict(
+                arch=arch,
+                data=data,
+                setting=default_setting,
+                attacks=_atk.WHITEBOX_ATTACKS
+            )
+            exp_combs.append(s)
     # robust ablation
     for setting in settings[1:]:
         s = dict(

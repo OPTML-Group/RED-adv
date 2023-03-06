@@ -14,9 +14,9 @@ def get_model(name, args):
     elif name == "resnet20s":
         return resnet20(args)
     elif name == "vgg11":
-        return VGG(args, 'VGG11')
+        return VGG(args, 'VGG11', num_classes=args.num_classes)
     elif name == "vgg13":
-        return VGG(args, 'VGG13')
+        return VGG(args, 'VGG13', num_classes=args.num_classes)
     elif name == "lenet":
         return LeNet(args)
     else:

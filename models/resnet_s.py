@@ -141,7 +141,7 @@ class ResNet(nn.Module):
 
 
 def resnet20(args):
-    return ResNet(args, BasicBlock, [3, 3, 3])
+    return ResNet(args, BasicBlock, [3, 3, 3], num_classes=args.num_classes)
 
 
 def resnet32():
