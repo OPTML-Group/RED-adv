@@ -82,7 +82,8 @@ if __name__ == "__main__":
     selected_attacks = list(itertools.chain(*selected_groups))
     grep_attack("cifar10", "resnet9", "origin", selected_attacks, "selected")
 
-    for attack in gargs.WHITEBOX_ATTACKS:
-        attack_name = training_utils.get_attack_name(attack)
-        grep_class("cifar10", "origin", attack_name, gargs.VALID_ARCHITECTURES, "full_archs")
-        grep_class("cifar10", "origin", attack_name, ["resnet9", "vgg11", "resnet20s"], "partial_archs")
+    for data in ['cifar10', 'cifar100']:
+        for attack in gargs.WHITEBOX_ATTACKS:
+            attack_name = training_utils.get_attack_name(attack)
+            grep_class(data, "origin", attack_name, gargs.VALID_ARCHITECTURES, "full_archs")
+            grep_class(data, "origin", attack_name, ["resnet9", "vgg11", "resnet20s"], "partial_archs")
