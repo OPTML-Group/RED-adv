@@ -28,7 +28,9 @@ def _get_exps():
         attacks=_atk.ALL_ATTACKS
     )]
     # arch ablation
-    for data in datasets[:2]:
+    for data in datasets:
+        if data == "mnist":
+            continue
         st = 1 if data == "cifar10" else 0
         for arch in archs[st:]:
             if arch == 'lenet':
@@ -50,20 +52,20 @@ def _get_exps():
         )
         exp_combs.append(s)
     # dataset ablation
-    for data in datasets[2:]:
-        if data == "tinyimagenet":
-            arch = "resnet18"
-        elif data == "mnist":
-            continue
-        else:
-            arch = default_arch
-        s = dict(
-            arch=arch,
-            data=data,
-            setting=default_setting,
-            attacks=_atk.WHITEBOX_ATTACKS
-        )
-        exp_combs.append(s)
+    # for data in datasets[2:]:
+    #     if data == "tinyimagenet":
+    #         arch = "resnet18"
+    #     elif data == "mnist":
+    #         continue
+    #     else:
+    #         arch = default_arch
+    #     s = dict(
+    #         arch=arch,
+    #         data=data,
+    #         setting=default_setting,
+    #         attacks=_atk.WHITEBOX_ATTACKS
+    #     )
+    #     exp_combs.append(s)
     return exp_combs
 
 
