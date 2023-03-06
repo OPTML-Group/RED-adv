@@ -38,8 +38,9 @@ def gen_commands_train_victim(dataset, arch, robust):
 
                     model_name = get_model_name(2, k, a, r, s, robust)
 
+                    epochs = 100 if dataset == "tinyimagenet" else 75
                     path = os.path.join(
-                        _model_dir, f"{model_name}_omp_2/checkpoint_75.pt")
+                        _model_dir, f"{model_name}_omp_2/checkpoint_{epochs}.pt")
                     # commands.append(command)
                     if not os.path.exists(path):
                         commands.append(command)
@@ -80,8 +81,9 @@ def gen_commands_attack_victim(dataset, arch, attacks, robust):
 
                         model_name = get_model_name(2, k, a, r, s, robust)
 
+                        epochs = 100 if dataset == "tinyimagenet" else 75
                         path = os.path.join(
-                            _model_dir, f"{model_name}_omp_2/checkpoint_75.pt")
+                            _model_dir, f"{model_name}_omp_2/checkpoint_{epochs}.pt")
                         # commands.append(command)
                         if os.path.exists(path):
                             if not (os.path.exists(os.path.join(atk_path, model_name, 'ori_pred.pt')) and
@@ -144,8 +146,8 @@ def gen_commands_large_set(dataset, arch, setting, attr_arch, specific_type=None
     input_types = [specific_type] if specific_type else _input_types
 
     commands = []
-    for atk_name in attack_names:
-        for tp in input_types:
+    for tp in input_types:
+        for atk_name in attack_names:
             grep_path = os.path.join(setting_dir, atk_name)
             output_path = os.path.join(_parsing_dir, setting, atk_name, tp)
 
@@ -413,11 +415,11 @@ if __name__ == "__main__":
         # parsing training
         # need call grep_data.py before training parsing models
         commands = []
-        commands += train_parsing_commands(attr_arch="conv4")
+        # commands += train_parsing_commands(attr_arch="conv4")
         commands += train_large_set_parsing_commands(attr_arch="conv4")
-        for at_arch in gargs.VALID_ATTR_ARCHS:
-            if at_arch != "conv4":
-                commands += train_parsing_commands(attr_arch=at_arch)
+        # for at_arch in gargs.VALID_ATTR_ARCHS:
+        #     if at_arch != "conv4":
+        #         commands += train_parsing_commands(attr_arch=at_arch)
         # commands += train_parsing_commands(attr_arch="mlp")
         if args.denoise:
             commands = []
@@ -431,13 +433,13 @@ if __name__ == "__main__":
 
         # parsing cross testing
         # commands += cross_test_parsing_commands(attr_arch="attrnet")
-        commands += cross_test_parsing_commands(attr_arch="conv4")
+        # commands += cross_test_parsing_commands(attr_arch="conv4")
         # commands += test_parsing_commands(attr_arch="mlp")
 
         # parsing testing
-        for at_arch in gargs.VALID_ATTR_ARCHS:
-            if at_arch != "conv4":
-                commands += test_parsing_commands(attr_arch=at_arch)
+        # for at_arch in gargs.VALID_ATTR_ARCHS:
+        #     if at_arch != "conv4":
+        #         commands += test_parsing_commands(attr_arch=at_arch)
         commands += test_large_set_parsing_commands(attr_arch="conv4")
 
         if args.denoise:
