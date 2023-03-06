@@ -29,7 +29,8 @@ def _get_exps():
     )]
     # arch ablation
     for data in datasets[:2]:
-        for arch in archs[1:]:
+        st = 1 if data == "cifar10" else 0
+        for arch in archs[st:]:
             if arch == 'lenet':
                 continue
             s = dict(
@@ -49,7 +50,7 @@ def _get_exps():
         )
         exp_combs.append(s)
     # dataset ablation
-    for data in datasets[1:]:
+    for data in datasets[2:]:
         if data == "tinyimagenet":
             arch = "resnet18"
         elif data == "mnist":
