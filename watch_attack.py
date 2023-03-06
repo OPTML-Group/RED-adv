@@ -54,7 +54,10 @@ for exp in gargs.EXPS:
 
     if not(exp['setting'] not in 'origin robust'):
         robust = 'robust' in exp['setting']
-        cmds = run.gen_commands_victim(
+        cmds = run.gen_commands_train_victim(
+            dataset=exp['data'], arch=exp['arch'], robust=robust)
+        print(len(cmds), end=' ')
+        cmds = run.gen_commands_attack_victim(
             dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
         print(len(cmds), end=' ')
     for attr_arch in ['conv4']:
