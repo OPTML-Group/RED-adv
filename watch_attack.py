@@ -27,68 +27,70 @@ def get_models(dataset, arch, robust=True, omp=2):
                         cnt += 1
     return cnt
 
+if __name__ == "__main__":
+    datasets = ["cifar10", "cifar100", "tinyimagenet"]
+    archs = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']
 
-datasets = ["cifar10", "cifar100", "tinyimagenet"]
-archs = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']
+    dataset = datasets[0]
+    for arch in archs:
+        print(f"arch: {arch}", end='\t')
+        n = get_models(dataset, arch, robust=False, omp=1)
+        print(f"omp1: {n: 4d}", end='\t')
+        n = get_models(dataset, arch, robust=False, omp=2)
+        print("omp2: ", n)
 
-dataset = datasets[0]
-for arch in archs:
-    print(f"arch: {arch}", end='\t')
-    n = get_models(dataset, arch, robust=False, omp=1)
-    print(f"omp1: {n: 4d}", end='\t')
-    n = get_models(dataset, arch, robust=False, omp=2)
-    print("omp2: ", n)
+    arch = archs[0]
+    for dataset, arch in zip(datasets[1:], ['resnet9', 'resnet18']):
+        print(f"data: {dataset}", end='\t')
+        n = get_models(dataset, arch, robust=False, omp=1)
+        print(f"omp1: {n: 4d}", end='\t')
+        n = get_models(dataset, arch, robust=False, omp=2)
+        print("omp2: ", n)
 
-arch = archs[0]
-for dataset, arch in zip(datasets[1:], ['resnet9', 'resnet18']):
-    print(f"data: {dataset}", end='\t')
-    n = get_models(dataset, arch, robust=False, omp=1)
-    print(f"omp1: {n: 4d}", end='\t')
-    n = get_models(dataset, arch, robust=False, omp=2)
-    print("omp2: ", n)
+    # victim training
+    commands = []
+    for exp in gargs.EXPS:
+        print(exp['data'], exp['arch'], exp['setting'], end=' ')
 
-# victim training
-commands = []
-for exp in gargs.EXPS:
-    print(exp['data'], exp['arch'], exp['setting'], end=' ')
-
-    if not(exp['setting'] not in 'origin robust'):
-        robust = 'robust' in exp['setting']
-        cmds = run.gen_commands_train_victim(
-            dataset=exp['data'], arch=exp['arch'], robust=robust)
-        print(len(cmds), end=' ')
-        cmds = run.gen_commands_attack_victim(
-            dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
-        print(len(cmds), end=' ')
-    for attr_arch in ['conv4']:
-        cmds = run.gen_commands_parsing(exp, attr_arch=attr_arch)
-        cmds2 = run.gen_commands_eval_parsing(exp, attr_arch=attr_arch)
-        print(attr_arch, len(cmds), len(cmds2), end=' ')
+        if not(exp['setting'] not in 'origin robust'):
+            robust = 'robust' in exp['setting']
+            n = get_models(exp['data'], exp['arch'], robust=robust, omp=1)
+            print(n, end=' ')
+            robust = 'robust' in exp['setting']
+            n = get_models(exp['data'], exp['arch'], robust=robust, omp=2)
+            print(n, end=' ')
+            cmds = run.gen_commands_attack_victim(
+                dataset=exp['data'], arch=exp['arch'], attacks=exp['attacks'], robust=robust)
+            print(len(cmds), end=' ')
+        for attr_arch in ['conv4']:
+            cmds = run.gen_commands_parsing(exp, attr_arch=attr_arch)
+            cmds2 = run.gen_commands_eval_parsing(exp, attr_arch=attr_arch)
+            print(attr_arch, len(cmds), len(cmds2), end=' ')
+        print()
+    # for exp1 in gargs.EXPS:
+    #     for exp2 in gargs.EXPS:
+    #         cmds = run.gen_commands_eval_parsing_cross(
+    #             exp1, exp2, attr_arch="conv4")
+    #         print(len(cmds), end='\t')
+    #     print()
+    for attr in gargs.VALID_ATTR_ARCHS:
+        cmds = run.gen_commands_parsing(gargs.EXPS[0], attr)
+        cmds2 = run.gen_commands_eval_parsing(gargs.EXPS[0], attr)
+        print(attr, len(cmds), len(cmds2), end=" ")
     print()
-for exp1 in gargs.EXPS:
-    for exp2 in gargs.EXPS:
-        cmds = run.gen_commands_eval_parsing_cross(
-            exp1, exp2, attr_arch="conv4")
-        print(len(cmds), end='\t')
-    print()
-for attr in gargs.VALID_ATTR_ARCHS:
-    cmds = run.gen_commands_parsing(gargs.EXPS[0], attr)
-    cmds2 = run.gen_commands_eval_parsing(gargs.EXPS[0], attr)
-    print(attr, len(cmds), len(cmds2), end=" ")
-print()
-cnt = 0
-for exp1 in gargs.EXPS[:5]:
-    for exp2 in gargs.EXPS[:5]:
-        cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, "conv4")
-        cnt += len(cmds)
-print("conv4", cnt)
-run.train_large_set_parsing_commands(attr_arch="conv4")
-run.test_large_set_parsing_commands(attr_arch="conv4")
+    cnt = 0
+    for exp1 in gargs.EXPS[:5]:
+        for exp2 in gargs.EXPS[:5]:
+            cmds = run.gen_commands_eval_parsing_cross(exp1, exp2, "conv4")
+            cnt += len(cmds)
+    print("conv4", cnt)
+    run.train_large_set_parsing_commands(attr_arch="conv4")
+    run.test_large_set_parsing_commands(attr_arch="conv4")
 
-print(f"denoise:")
-commands = run.train_parsing_commands("conv4", "denoise")
-run.train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
-# commands = run.gen_commands_eval_parsing_cross(gargs.EXPS[0], gargs.EXPS[0], "conv4", "denoise")
-commands = run.cross_test_parsing_commands("conv4", "denoise")
-# print(len(commands))
-commands = run.test_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
+    print(f"denoise:")
+    commands = run.train_parsing_commands("conv4", "denoise")
+    run.train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
+    # commands = run.gen_commands_eval_parsing_cross(gargs.EXPS[0], gargs.EXPS[0], "conv4", "denoise")
+    commands = run.cross_test_parsing_commands("conv4", "denoise")
+    # print(len(commands))
+    commands = run.test_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
