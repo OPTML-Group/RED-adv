@@ -135,6 +135,10 @@ def gen_commands_large_set(dataset, arch, setting, attr_arch, specific_type=None
     _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _data_arch_name)
 
     setting_dir = os.path.join(_grep_dir, setting)
+
+    if not os.path.exists(setting_dir):
+        return []
+
     attack_names = os.listdir(setting_dir)
 
     input_types = [specific_type] if specific_type else _input_types
@@ -247,6 +251,9 @@ def gen_commands_large_set_test(dataset, arch, setting, attr_arch, specific_type
     _grep_dir = os.path.join(gargs.GREP_DIR, _data_arch_name, setting)
     _log_dir = os.path.join(gargs.PARSING_LOG_DIR, attr_arch, _data_arch_name, setting)
 
+    if not os.path.exists(_grep_dir):
+        return []
+
     attack_names = os.listdir(_grep_dir)
 
     input_types = [specific_type] if specific_type else _input_types
@@ -326,6 +333,8 @@ def train_large_set_parsing_commands(attr_arch, specific_type = None):
         ("cifar10", "full_archs", "origin"),
         ("cifar10", "partial_archs", "origin"),
         ("cifar10", "resnet9", "grouped_attack_origin"),
+        ("cifar100", "full_archs", "origin"),
+        ("tinyimagenet", "full_archs", "origin"),
     ]
     for data, arch, setting in exps:
         commands += gen_commands_large_set(data, arch, setting, attr_arch, specific_type)
@@ -338,6 +347,8 @@ def test_large_set_parsing_commands(attr_arch, specific_type = None):
         ("cifar10", "full_archs", "origin"),
         ("cifar10", "partial_archs", "origin"),
         ("cifar10", "resnet9", "grouped_attack_origin"),
+        ("cifar100", "full_archs", "origin"),
+        ("tinyimagenet", "full_archs", "origin"),
     ]
     for data, arch, setting in exps:
         commands += gen_commands_large_set_test(data, arch, setting, attr_arch, specific_type)
