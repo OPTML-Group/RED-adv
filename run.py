@@ -375,7 +375,7 @@ if __name__ == "__main__":
                         default="0,1,2,3,4,5,6,7", help="Run on which gpus. e.g.: --gpus 0,1,2,3")
     parser.add_argument('--thread', type=int, default=1, help="Number of commands running parallel in one gpu.")
     parser.add_argument('--debug', action="store_true", help="Only generate commands without executing if tagged.")
-    parser.add_argument('--denoise', action="store_true")
+    parser.add_argument('--denoise', action="store_true", help='Using denoiser when training attribute models.')
     args = parser.parse_args()
     debug = args.debug
     stage = args.stage

@@ -17,9 +17,8 @@ The pretrained DnCNN model is in [GoogleDrive](https://drive.google.com/file/d/1
 
 ### Train victim model
 ```bash
-python run.py --stage 1 --thread 3 --gpus 0,1,2,3,4,5,6,7
+python run.py --stage 0 --thread 3 --gpus 0,1,2,3,4,5,6,7
 ```
-TODO: split training and attacking stage.
 
 ### Get attack images
 ```bash
@@ -42,10 +41,17 @@ python run.py --stage 2 --thread 3 --gpus 0,1,2,3,4,5,6,7
 python run.py --stage 3 --thread 20 --gpus 0,1,2,3,4,5,6,7
 ```
 
+### Train and Evaluate parsing model with denoiser
+```bash
+python run.py --stage 2 --thread 3 --gpus 0,1,2,3,4,5,6,7 --denoise
+python run.py --stage 3 --thread 5 --gpus 0,1,2,3,4,5,6,7 --denoise
+```
+
 ## Optional arguments in run.py
 ```
 --stage STAGE    To decide which part of commands to execute. (1, 2, 3)
 --gpus GPUS      Run on which gpus. e.g.: --gpus 0,1,2,3
 --thread THREAD  Number of commands running parallel in one gpu.
+--denoise        Using denoiser when training attribute models. 
 --debug          Generate commands without executing if tagged.
 ```
