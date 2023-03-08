@@ -336,7 +336,6 @@ def train_large_set_parsing_commands(attr_arch, specific_type = None):
         ("cifar10", "partial_archs", "origin"),
         ("cifar10", "resnet9", "grouped_attack_origin"),
         ("cifar100", "full_archs", "origin"),
-        ("tinyimagenet", "full_archs", "origin"),
     ]
     for data, arch, setting in exps:
         commands += gen_commands_large_set(data, arch, setting, attr_arch, specific_type)
@@ -350,7 +349,6 @@ def test_large_set_parsing_commands(attr_arch, specific_type = None):
         ("cifar10", "partial_archs", "origin"),
         ("cifar10", "resnet9", "grouped_attack_origin"),
         ("cifar100", "full_archs", "origin"),
-        ("tinyimagenet", "full_archs", "origin"),
     ]
     for data, arch, setting in exps:
         commands += gen_commands_large_set_test(data, arch, setting, attr_arch, specific_type)
@@ -424,8 +422,8 @@ if __name__ == "__main__":
         if args.denoise:
             commands = []
             print("denoise")
-            commands += train_parsing_commands("conv4", "denoise")
-            # commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
+            # commands += train_parsing_commands("conv4", "denoise")
+            commands += train_large_set_parsing_commands(attr_arch="conv4", specific_type="denoise")
         run_commands(gpus * th if not debug else [0], commands, call=not debug,
                      suffix="commands2", shuffle=False, delay=1)
     elif stage == 3:

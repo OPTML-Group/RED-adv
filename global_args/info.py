@@ -34,8 +34,8 @@ DATASET_STD = {
 }
 
 TRAINING_ARGS = {
-    "cifar10": "",
-    "cifar100": "",
-    "tinyimagenet": " --epochs 100 --save-freq 25",
+    "cifar10": " --save-freq 5",
+    "cifar100": " --save-freq 5",
+    "tinyimagenet": " --epochs 100 --save-freq 5",
     "mnist": " --epochs 3 --save-freq 1",
 }

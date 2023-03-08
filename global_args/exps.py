@@ -28,10 +28,13 @@ def _get_exps():
         attacks=_atk.ALL_ATTACKS
     )]
     # arch ablation
-    for data in datasets:
+    for data in ["cifar10", "cifar100"]:
         if data == "mnist":
             continue
         st = 1 if data == "cifar10" else 0
+        atks = _atk.WHITEBOX_ATTACKS
+        if data == "cifar10":
+            atks = atks + _atk.ENSEMBLE_ATTACKS
         for arch in archs[st:]:
             if arch == 'lenet':
                 continue
@@ -39,7 +42,7 @@ def _get_exps():
                 arch=arch,
                 data=data,
                 setting=default_setting,
-                attacks=_atk.WHITEBOX_ATTACKS
+                attacks=atks
             )
             exp_combs.append(s)
     # robust ablation
@@ -52,20 +55,20 @@ def _get_exps():
         )
         exp_combs.append(s)
     # dataset ablation
-    # for data in datasets[2:]:
-    #     if data == "tinyimagenet":
-    #         arch = "resnet18"
-    #     elif data == "mnist":
-    #         continue
-    #     else:
-    #         arch = default_arch
-    #     s = dict(
-    #         arch=arch,
-    #         data=data,
-    #         setting=default_setting,
-    #         attacks=_atk.WHITEBOX_ATTACKS
-    #     )
-    #     exp_combs.append(s)
+    for data in datasets[2:]:
+        if data == "tinyimagenet":
+            arch = "resnet18"
+        elif data == "mnist":
+            continue
+        else:
+            arch = default_arch
+        s = dict(
+            arch=arch,
+            data=data,
+            setting=default_setting,
+            attacks=_atk.WHITEBOX_ATTACKS
+        )
+        exp_combs.append(s)
     return exp_combs
 
 
