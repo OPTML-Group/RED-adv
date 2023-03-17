@@ -17,7 +17,7 @@ bash run.sh
 ```
 
 ### Pretrained DnCNN download
-The pretrained DnCNN model is in [GoogleDrive](https://drive.google.com/file/d/1xZCmviKXxULit0dEyekhXs32waEc00Qa/view).
+The pretrained DnCNN model is in [GoogleDrive](https://drive.google.com/file/d/1xZCmviKXxULit0dEyekhXs32waEc00Qa/view), same as the denoising-only objective trained model mentioned in ["REVERSE ENGINEERING OF IMPERCEPTIBLE ADVERSARIAL IMAGE PERTURBATIONS"](https://arxiv.org/pdf/2203.14145.pdf).
 
 ## Pipeline
 
@@ -55,7 +55,7 @@ python run.py --stage 3 --thread 5 --gpus 0,1,2,3,4,5,6,7 --denoise
 
 ## Optional arguments in run.py
 ```
---stage STAGE    To decide which part of commands to execute. (1, 2, 3)
+--stage STAGE    To decide which part of commands to execute. (0, 1, 2, 3)
 --gpus GPUS      Run on which gpus. e.g.: --gpus 0,1,2,3
 --thread THREAD  Number of commands running parallel in one gpu.
 --denoise        Using denoiser when training attribute models. 
