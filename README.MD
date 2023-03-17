@@ -59,3 +59,13 @@ python run.py --stage 3 --thread 5 --gpus 0,1,2,3,4,5,6,7 --denoise
 --denoise        Using denoiser when training attribute models. 
 --debug          Generate commands without executing if tagged.
 ```
+
+## citation
+```
+@article{yao2023can,
+  title={Can Adversarial Examples Be Parsed to Reveal Victim Model Information?},
+  author={Yao, Yuguang and Liu, Jiancheng and Gong, Yifan and Liu, Xiaoming and Wang, Yanzhi and Lin, Xue and Liu, Sijia},
+  journal={arXiv preprint arXiv:2303.07474},
+  year={2023}
+}
+```
