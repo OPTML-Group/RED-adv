@@ -60,7 +60,7 @@ python run.py --stage 3 --thread 5 --gpus 0,1,2,3,4,5,6,7 --denoise
 --debug          Generate commands without executing if tagged.
 ```
 
-## citation
+## Citation
 ```
 @article{yao2023can,
   title={Can Adversarial Examples Be Parsed to Reveal Victim Model Information?},
