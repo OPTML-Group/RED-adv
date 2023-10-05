@@ -1,15 +1,14 @@
-
-import torch
-from torch.cuda.amp import autocast
-import torch.optim as optim
-from torch.optim.lr_scheduler import CosineAnnealingLR
-import numpy as np
-
 import os
-import attr_models
-import global_args as gargs
+
+import numpy as np
+import torch
+import torch.optim as optim
+from torch.cuda.amp import autocast
+from torch.optim.lr_scheduler import CosineAnnealingLR
 
 import arg_parser
+import attr_models
+import global_args as gargs
 
 
 def set_seed(seed):
@@ -28,13 +27,19 @@ def get_data(args, train):
     else:
         prefixes = [args.input_type, "attr_labels"]
 
-    datas = [torch.load(os.path.join(
-        args.input_folder, f"{prefix}_{suffix}.pt")).detach() for prefix in prefixes]
+    datas = [
+        torch.load(os.path.join(args.input_folder, f"{prefix}_{suffix}.pt")).detach()
+        for prefix in prefixes
+    ]
     if not args.not_load_to_cuda:
         datas = [data.cuda() for data in datas]
     dataset = torch.utils.data.TensorDataset(*datas)
     dataloader = torch.utils.data.DataLoader(
-        dataset, batch_size=args.batch_size, shuffle=train, pin_memory=args.not_load_to_cuda)
+        dataset,
+        batch_size=args.batch_size,
+        shuffle=train,
+        pin_memory=args.not_load_to_cuda,
+    )
     for data in datas:
         print(data.shape)
     return dataloader
@@ -46,12 +51,22 @@ def get_model(args, n_class, n_output):
         num_channel=gargs.DATASET_NUM_CHANNEL[args.dataset],
         num_class=n_class,
         num_output=n_output,
-        img_size=gargs.DATASET_INPUT_SIZE[args.dataset]
+        img_size=gargs.DATASET_INPUT_SIZE[args.dataset],
     ).cuda()
     return model
 
 
-def train_epoch(model, train_dl, criterion, optimizer, denoiser=None, denoise_criterion=None, denoise_optimizer=None, gamma1=None, frozen_attr=False):
+def train_epoch(
+    model,
+    train_dl,
+    criterion,
+    optimizer,
+    denoiser=None,
+    denoise_criterion=None,
+    denoise_optimizer=None,
+    gamma1=None,
+    frozen_attr=False,
+):
     model.train()
     total_loss = 0
     if denoiser:
@@ -120,7 +135,7 @@ def validate(model, test_dl, denoiser=None):
             outputs = model(attr_input)
             correct_test += (outputs.argmax(-2) == gt).sum(0)
 
-    test_acc = list((correct_test/test_size*100).cpu().numpy())
+    test_acc = list((correct_test / test_size * 100).cpu().numpy())
     return test_acc
 
 
@@ -140,14 +155,17 @@ def main():
     model = get_model(args, n_class, n_output)
     denoiser, d_optimizer, d_scheduler, d_criterion = None, None, None, None
     if args.input_type == "denoise":
-        denoiser = attr_models.DnCNN(
-            image_channels=3, depth=17, n_channels=64).cuda()
+        denoiser = attr_models.DnCNN(image_channels=3, depth=17, n_channels=64).cuda()
         item = torch.load(args.pretrained_denoiser_path)
-        denoiser.load_state_dict(item['state_dict'])
+        denoiser.load_state_dict(item["state_dict"])
 
-        assert os.path.exists(os.path.join(os.path.dirname(args.save_folder), "delta", "final.pt"))
-        
-        pretrain_attr_path = os.path.join(os.path.dirname(args.save_folder), "delta", "best.pt")
+        assert os.path.exists(
+            os.path.join(os.path.dirname(args.save_folder), "delta", "final.pt")
+        )
+
+        pretrain_attr_path = os.path.join(
+            os.path.dirname(args.save_folder), "delta", "best.pt"
+        )
         item = torch.load(pretrain_attr_path)
         model.load_state_dict(item)
     else:
@@ -157,31 +175,37 @@ def main():
 
     os.makedirs(args.save_folder, exist_ok=True)
 
-    fout = open(os.path.join(args.save_folder, "output.log"), 'w')
-
+    fout = open(os.path.join(args.save_folder, "output.log"), "w")
 
     if denoiser:
         # denoiser pretrain
         d_optimizer = optim.SGD(denoiser.parameters(), lr=args.denoiser_pretrain_lr)
         d_scheduler = CosineAnnealingLR(d_optimizer, T_max=args.denoiser_pretrain_epoch)
-        d_criterion = torch.nn.L1Loss(
-            size_average=None, reduce=None, reduction='mean')
+        d_criterion = torch.nn.L1Loss(size_average=None, reduce=None, reduction="mean")
         for i in range(args.denoiser_pretrain_epoch):
-            train_acc, train_loss = train_epoch(model, train_dl, None, None,
-                                                denoiser, d_criterion, d_optimizer, args.gamma1, frozen_attr=True)
+            train_acc, train_loss = train_epoch(
+                model,
+                train_dl,
+                None,
+                None,
+                denoiser,
+                d_criterion,
+                d_optimizer,
+                args.gamma1,
+                frozen_attr=True,
+            )
             train_acc_print = ", ".join("{:.2f}".format(x) for x in train_acc)
             train_loss_print = ", ".join("{:.6f}".format(x) for x in train_loss)
             d_scheduler.step()
             print(
-                f"Pre Epoch: {i}, Train acc: {train_acc_print}, Train loss: {train_loss_print}")
+                f"Pre Epoch: {i}, Train acc: {train_acc_print}, Train loss: {train_loss_print}"
+            )
 
             test_acc = validate(model, test_dl, denoiser)
 
             test_print = ", ".join("{:.2f}".format(x) for x in test_acc)
 
-            print(
-                f"Pre Epoch: {i}, Test acc: {test_print}")
-
+            print(f"Pre Epoch: {i}, Test acc: {test_print}")
 
     if denoiser:
         optimizer = optim.SGD(model.parameters(), lr=args.parser_cotrain_lr)
@@ -189,8 +213,7 @@ def main():
         criterion = torch.nn.CrossEntropyLoss()
         d_optimizer = optim.SGD(denoiser.parameters(), lr=args.denoiser_cotrain_lr)
         d_scheduler = CosineAnnealingLR(d_optimizer, T_max=args.cotrain_epoch)
-        d_criterion = torch.nn.L1Loss(
-            size_average=None, reduce=None, reduction='mean')
+        d_criterion = torch.nn.L1Loss(size_average=None, reduce=None, reduction="mean")
         n_epochs = args.cotrain_epoch
     else:
         optimizer = optim.SGD(model.parameters(), lr=args.lr)
@@ -203,15 +226,25 @@ def main():
 
     for i in range(n_epochs):
         print(f"Epoch: {i}", file=fout)
-        train_acc, train_loss = train_epoch(model, train_dl, criterion, optimizer,
-                                            denoiser, d_criterion, d_optimizer, args.gamma1)
+        train_acc, train_loss = train_epoch(
+            model,
+            train_dl,
+            criterion,
+            optimizer,
+            denoiser,
+            d_criterion,
+            d_optimizer,
+            args.gamma1,
+        )
         train_acc_print = ", ".join("{:.2f}".format(x) for x in train_acc)
         train_loss_print = ", ".join("{:.6f}".format(x) for x in train_loss)
 
         print(
-            f"Epoch: {i}, Train acc: {train_acc_print}, Train loss: {train_loss_print}")
+            f"Epoch: {i}, Train acc: {train_acc_print}, Train loss: {train_loss_print}"
+        )
         print(
-            f"Train acc: {train_acc_print}, Train loss: {train_loss_print}", file=fout)
+            f"Train acc: {train_acc_print}, Train loss: {train_loss_print}", file=fout
+        )
         scheduler.step()
         if denoiser:
             d_scheduler.step()
@@ -221,22 +254,28 @@ def main():
         if np.mean(test_acc) > best_acc:
             best_acc = np.mean(test_acc)
             best_epoch = i
-            torch.save(model.state_dict(), os.path.join(
-                args.save_folder, "best.pt"))
+            torch.save(model.state_dict(), os.path.join(args.save_folder, "best.pt"))
             if denoiser:
-                torch.save(denoiser.state_dict(), os.path.join(
-                    args.save_folder, "denoiser_best.pt"))
+                torch.save(
+                    denoiser.state_dict(),
+                    os.path.join(args.save_folder, "denoiser_best.pt"),
+                )
 
         test_print = ", ".join("{:.2f}".format(x) for x in test_acc)
 
         print(
-            f"Epoch: {i}, Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}")
+            f"Epoch: {i}, Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}"
+        )
         print(
-            f"Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}", file=fout)
+            f"Test acc: {test_print}, best acc: {best_acc:.2f}, best epoch: {best_epoch}",
+            file=fout,
+        )
 
     torch.save(model.state_dict(), os.path.join(args.save_folder, "final.pt"))
     if denoiser:
-        torch.save(denoiser.state_dict(), os.path.join(args.save_folder, "denoiser_final.pt"))
+        torch.save(
+            denoiser.state_dict(), os.path.join(args.save_folder, "denoiser_final.pt")
+        )
     # save path
 
 

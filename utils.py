@@ -1,9 +1,10 @@
 import os
-import time
-import torch
-import shutil
 import random
+import shutil
+import time
+
 import numpy as np
+import torch
 
 
 def plot_tensorboard(writer, path, obj, idx, labels=None):
@@ -15,12 +16,11 @@ def plot_tensorboard(writer, path, obj, idx, labels=None):
         assert obj.ndim == 1
         if labels is None:
             n_item = len(obj)
-            labels = [str(i+1) for i in range(n_item)]
+            labels = [str(i + 1) for i in range(n_item)]
         dic = {labels[i]: item for i, item in enumerate(obj)}
         writer.add_scalars(path, dic, idx)
     else:
-        raise NotImplemented(
-            "Type {} plotting is not implemented!".format(type(obj)))
+        raise NotImplemented("Type {} plotting is not implemented!".format(type(obj)))
 
 
 def set_seed(seed):
@@ -52,10 +52,10 @@ def get_datasets_from_tensor_with_cnt(data, label, cnt, cuda=False):
     for num in cnt:
         test_num = int(num * 0.2)
 
-        train_data.append(data[st + test_num: st + num])
-        train_label.append(label[st + test_num: st + num])
-        test_data.append(data[st: st + test_num])
-        test_label.append(label[st: st + test_num])
+        train_data.append(data[st + test_num : st + num])
+        train_label.append(label[st + test_num : st + num])
+        test_data.append(data[st : st + test_num])
+        test_label.append(label[st : st + test_num])
 
         st += num
 
@@ -96,7 +96,9 @@ class AverageMeter(object):
 
 
 # Feb. 11, 2023 version
-def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5, ext_command=""):
+def run_commands(
+    gpus, commands, suffix, call=False, shuffle=True, delay=0.5, ext_command=""
+):
     command_dir = os.path.join("commands", suffix)
     if len(commands) == 0:
         return
@@ -107,10 +109,11 @@ def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5, ex
         random.shuffle(gpus)
     os.makedirs(command_dir, exist_ok=True)
 
-    stop_path = os.path.join('commands', 'stop_{}.sh'.format(suffix))
-    with open(stop_path, 'w') as fout:
-        print("kill $(ps aux|grep 'bash " + command_dir +
-              "'|awk '{print $2}')", file=fout)
+    stop_path = os.path.join("commands", "stop_{}.sh".format(suffix))
+    with open(stop_path, "w") as fout:
+        print(
+            "kill $(ps aux|grep 'bash " + command_dir + "'|awk '{print $2}')", file=fout
+        )
 
     n_gpu = len(gpus)
     for i, gpu in enumerate(gpus):
@@ -121,7 +124,7 @@ def run_commands(gpus, commands, suffix, call=False, shuffle=True, delay=0.5, ex
         ext_command_i = ext_command.format(i=i)
 
         sh_path = os.path.join(command_dir, "run{}.sh".format(i))
-        fout = open(sh_path, 'w')
+        fout = open(sh_path, "w")
         for com in i_commands:
             print(prefix + com + ext_command_i, file=fout)
         fout.close()

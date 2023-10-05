@@ -1,8 +1,8 @@
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
-
 import torch
 
 import attr_models
@@ -23,15 +23,20 @@ class EvaluateParsing:
         suffix = "best"
         self.denoiser = None
         attr_model_dir = os.path.join(
-            gargs.PARSING_DIR, self.attr_arch, self.data_arch,
-            self.setting, self.atk_name, self.input_type)
+            gargs.PARSING_DIR,
+            self.attr_arch,
+            self.data_arch,
+            self.setting,
+            self.atk_name,
+            self.input_type,
+        )
 
         if self.input_type == "denoise":
             suffix = "final"
-            attr_denoiser_path = os.path.join(
-                attr_model_dir, f"denoiser_{suffix}.pt")
+            attr_denoiser_path = os.path.join(attr_model_dir, f"denoiser_{suffix}.pt")
             denoiser = attr_models.DnCNN(
-                image_channels=3, depth=17, n_channels=64).cuda()
+                image_channels=3, depth=17, n_channels=64
+            ).cuda()
             denoiser.load_state_dict(torch.load(attr_denoiser_path))
 
         attr_model_path = os.path.join(attr_model_dir, f"{suffix}.pt")
@@ -43,7 +48,8 @@ class EvaluateParsing:
             num_channel=gargs.DATASET_NUM_CHANNEL[self.dataset],
             num_class=self.n_class,
             num_output=self.n_output,
-            img_size=gargs.DATASET_INPUT_SIZE[self.dataset]).cuda()
+            img_size=gargs.DATASET_INPUT_SIZE[self.dataset],
+        ).cuda()
         print(f"Load from {attr_model_path}")
         attr_model.load_state_dict(torch.load(attr_model_path))
         self.attr_model = attr_model
@@ -60,9 +66,10 @@ class EvaluateParsing:
     def predict_attr(self, inputs):
         dataset = torch.utils.data.TensorDataset(inputs.cuda())
         dataloader = torch.utils.data.DataLoader(
-            dataset, batch_size=2048, shuffle=False)
+            dataset, batch_size=2048, shuffle=False
+        )
         pred_labels = []
-        for (x, ) in dataloader:
+        for (x,) in dataloader:
             pred_labels.append(self.predict_attr_batch(x))
         pred_labels = torch.cat(pred_labels, axis=0)
         return pred_labels
@@ -70,7 +77,8 @@ class EvaluateParsing:
     def load_grep_data(self, grep_dir=None):
         if grep_dir is None:
             grep_dir = os.path.join(
-                gargs.GREP_DIR, self.data_arch, self.setting, self.atk_name)
+                gargs.GREP_DIR, self.data_arch, self.setting, self.atk_name
+            )
 
         input_name = "delta" if self.input_type == "delta" else "x_adv"
         inputs = torch.load(os.path.join(grep_dir, f"{input_name}_test.pt"))
@@ -90,7 +98,7 @@ class EvaluateParsing:
             cnt_pred = cnt_pred * shape_pred[i] + preds[:, i]
         for i in range(len(shape_labels)):
             cnt_label = cnt_label * shape_labels[i] + labels[:, i]
-        
+
         confusion = np.zeros([np.prod(shape_labels), np.prod(shape_pred)])
         for pred, label in zip(cnt_pred, cnt_label):
             confusion[label, pred] += 1
@@ -103,12 +111,14 @@ class EvaluateParsing:
         os.makedirs(save_dir, exist_ok=True)
         plt.clf()
         sns.heatmap(self.confusion)
-        plt.savefig(os.path.join(save_dir, "confusion" + ".png"),
-                    bbox_inches='tight', dpi=300)
-    
+        plt.savefig(
+            os.path.join(save_dir, "confusion" + ".png"), bbox_inches="tight", dpi=300
+        )
+
     def main(self):
         self.pre_process()
         self.get_confusion()
+
 
 if __name__ == "__main__":
     save_dir = "./figs/confusion_matrix"

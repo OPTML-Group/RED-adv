@@ -1,10 +1,11 @@
-import torch
-
 import os
 
-import attr_models
+import torch
+
 import arg_parser
+import attr_models
 import main_parser
+
 
 def main():
     args = arg_parser.parse_args_model_parsing(train=False)
@@ -25,12 +26,11 @@ def main():
 
     if args.input_type == "denoise":
         suffix = "final"
-        denoiser = attr_models.DnCNN(
-            image_channels=3, depth=17, n_channels=64).cuda()
+        denoiser = attr_models.DnCNN(image_channels=3, depth=17, n_channels=64).cuda()
         denoiser_path = os.path.join(args.save_folder, f"denoiser_{suffix}.pt")
         assert os.path.exists(denoiser_path)
         denoiser.load_state_dict(torch.load(denoiser_path))
-        
+
     model.load_state_dict(torch.load(os.path.join(args.save_folder, f"{suffix}.pt")))
 
     test_acc = main_parser.validate(model, test_dl, denoiser)
@@ -41,10 +41,11 @@ def main():
     file_name = f"data_{name1}___model_{name3}__{name2}.log"
     log_path = os.path.join(args.log_dir, file_name)
     os.makedirs(args.log_dir, exist_ok=True)
-    fout = open(log_path, 'w')
+    fout = open(log_path, "w")
 
     for i in test_acc:
-        print(i, file = fout)
+        print(i, file=fout)
+
 
 if __name__ == "__main__":
     main()

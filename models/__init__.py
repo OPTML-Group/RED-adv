@@ -1,22 +1,25 @@
-from .resnet9 import ResNet9
+from .lenet import LeNet
 from .resnet import resnet18
+from .resnet9 import ResNet9
 from .resnet_s import resnet20
 from .vgg import VGG
-from .lenet import LeNet
 
 
 def get_model(name, args):
     if name == "resnet9":
-        return ResNet9(num_classes=args.num_classes,
-                       kernel_size=args.kernel_size, act_func=args.act_func)
+        return ResNet9(
+            num_classes=args.num_classes,
+            kernel_size=args.kernel_size,
+            act_func=args.act_func,
+        )
     elif name == "resnet18":
         return resnet18(args)
     elif name == "resnet20s":
         return resnet20(args)
     elif name == "vgg11":
-        return VGG(args, 'VGG11', num_classes=args.num_classes)
+        return VGG(args, "VGG11", num_classes=args.num_classes)
     elif name == "vgg13":
-        return VGG(args, 'VGG13', num_classes=args.num_classes)
+        return VGG(args, "VGG13", num_classes=args.num_classes)
     elif name == "lenet":
         return LeNet(args)
     else:

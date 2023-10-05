@@ -1,22 +1,28 @@
 import os
-import torch
-import global_args as gargs
-import training_utils
-import attr_models
+
 import matplotlib.pyplot as plt
 import numpy as np
+import torch
+
+import attr_models
+import global_args as gargs
+import training_utils
+
 
 def get_img(path):
     datas = training_utils.load_datas(path, gargs.FULL_RESULT_NAMES)
     x_adv, delta, adv_pred, ori_pred, target = datas
     idx = 8000
     while idx < 10000:
-        while idx < 10000 and (adv_pred[idx] == target[idx] or ori_pred[idx] != target[idx]):
+        while idx < 10000 and (
+            adv_pred[idx] == target[idx] or ori_pred[idx] != target[idx]
+        ):
             idx += 1
         if idx == 10000:
             break
         yield idx, x_adv[idx], delta[idx]
         idx += 1
+
 
 def get_layer_output(model, input, layer):
     x = input
@@ -26,11 +32,14 @@ def get_layer_output(model, input, layer):
         x = model.encoder[layer][i](x)
     return x
 
+
 def visualize_image(img, save_dir, save_name):
     pth = os.path.join(save_dir, save_name)
     import cv2
+
     img = cv2.resize(img, [128, 128], interpolation=cv2.INTER_NEAREST)
     cv2.imwrite(pth, img)
+
 
 def visualize_features(save_dir):
     criterion = torch.nn.CrossEntropyLoss()
@@ -42,13 +51,15 @@ def visualize_features(save_dir):
     atk = training_utils.get_attack_name(attack)
     da_name = f"{dataset}_{arch}"
     tp = "delta"
-    model_path = os.path.join(gargs.PARSING_DIR, attr_arch, da_name, setting, atk, tp, "best.pt")
+    model_path = os.path.join(
+        gargs.PARSING_DIR, attr_arch, da_name, setting, atk, tp, "best.pt"
+    )
 
     model = attr_models.ConvNet4(
         num_channel=gargs.DATASET_NUM_CHANNEL[dataset],
         num_class=3,
         num_output=3,
-        img_size=gargs.DATASET_INPUT_SIZE[dataset]
+        img_size=gargs.DATASET_INPUT_SIZE[dataset],
     )
     print(f"Load from {model_path}")
     state_dict = torch.load(model_path)
@@ -80,8 +91,16 @@ def visualize_features(save_dir):
                         if (pred != gt).any():
                             continue
                         origin = x_adv - delta
-                        origin = (origin.permute([1, 2, 0]).cpu().numpy() * gargs.DATASET_STD[dataset] + gargs.DATASET_MEAN[dataset]) * 255
-                        x_adv = (x_adv.permute([1, 2, 0]).cpu().numpy() * gargs.DATASET_STD[dataset] + gargs.DATASET_MEAN[dataset]) * 255
+                        origin = (
+                            origin.permute([1, 2, 0]).cpu().numpy()
+                            * gargs.DATASET_STD[dataset]
+                            + gargs.DATASET_MEAN[dataset]
+                        ) * 255
+                        x_adv = (
+                            x_adv.permute([1, 2, 0]).cpu().numpy()
+                            * gargs.DATASET_STD[dataset]
+                            + gargs.DATASET_MEAN[dataset]
+                        ) * 255
                         delta = (x_adv - origin) + 128
                         save_path = os.path.join(save_dir, str(idx))
                         os.makedirs(save_path, exist_ok=True)
@@ -94,7 +113,9 @@ def visualize_features(save_dir):
                             layer_i -= layer_i.min()
                             layer_i /= layer_i.max()
                             layer_i *= 255
-                            visualize_image(layer_i, save_path, f"layer_{layer}_{dir_name}.png")
+                            visualize_image(
+                                layer_i, save_path, f"layer_{layer}_{dir_name}.png"
+                            )
                         cnt += 1
                         if cnt > 9:
                             break
@@ -105,14 +126,14 @@ def visualize_features(save_dir):
                         loss = criterion(output, gt[:, i])
                         loss.backward()
                         grad = raw_input.grad[0].permute([1, 2, 0]).cpu().numpy()
-                        grad = (grad ** 2).sum(axis = -1) ** 0.5
+                        grad = (grad**2).sum(axis=-1) ** 0.5
                         grad = grad / grad.max() * 255
                         # grad = grad / np.abs(grad).max() * 128 + 128
                         visualize_image(grad, save_path, f"img_grad_{i}_{dir_name}.png")
 
-    
 
 if __name__ == "__main__":
     import shutil
+
     shutil.rmtree("visualize", ignore_errors=True)
     visualize_features("./visualize")

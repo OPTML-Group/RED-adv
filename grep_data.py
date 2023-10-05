@@ -1,8 +1,8 @@
 import os
 import shutil
-import tqdm
 
 import torch
+import tqdm
 
 import global_args as gargs
 import training_utils
@@ -21,9 +21,9 @@ def _check_datas(datas, after=False, log_path=None):
             for pred in datas[2:]:
                 assert pred.ndim == 1
             assert log_path is not None and os.path.exists(log_path)
-            with open(log_path, 'r') as fin:
-                ncs = float(fin.readline()[:-1].split(': ')[-1])
-                ns = float(fin.readline()[:-1].split(': ')[-1])
+            with open(log_path, "r") as fin:
+                ncs = float(fin.readline()[:-1].split(": ")[-1])
+                ns = float(fin.readline()[:-1].split(": ")[-1])
             succ = datas[2].ne(datas[4])
             corr = datas[3].eq(datas[4])
             n_correct_success = sum(succ * corr).item() / 100
@@ -37,8 +37,6 @@ def _check_datas(datas, after=False, log_path=None):
                 assert pred.ndim == 1 or pred.ndim == 2 and pred.shape[1] == 10
 
 
-
-
 def clean_up_result(dir_path):
     if training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES):
         print(f"Check '{dir_path}'")
@@ -50,8 +48,9 @@ def clean_up_result(dir_path):
         if datas[3].ndim == 2:
             print(f"argmax datas[3]!!")
             datas[3] = datas[3].argmax(dim=1)
-        _check_datas(datas, after=True, log_path=os.path.join(
-            dir_path, 'attack_acc.log'))
+        _check_datas(
+            datas, after=True, log_path=os.path.join(dir_path, "attack_acc.log")
+        )
 
         # over write!!! careful!!!!
         training_utils.backup(dir_path)
@@ -59,8 +58,9 @@ def clean_up_result(dir_path):
 
         print(f"Check '{dir_path}'")
         datas = training_utils.load_datas(dir_path, gargs.FULL_RESULT_NAMES)
-        _check_datas(datas, after=True, log_path=os.path.join(
-            dir_path, 'attack_acc.log'))
+        _check_datas(
+            datas, after=True, log_path=os.path.join(dir_path, "attack_acc.log")
+        )
         print(f"Check '{dir_path}' success")
         for name in gargs.PARTIAL_RESULT_NAMES:
             path = os.path.join(dir_path, name)
@@ -68,6 +68,7 @@ def clean_up_result(dir_path):
                 if False:
                     print(f"Remove {path}?")
                     from IPython import embed
+
                     embed()
                 os.remove(path)
 
@@ -88,13 +89,15 @@ def _clean_up_all():
         for model_name in model_names:
             dir_path = os.path.join(atk_path, model_name)
             clean_up_result(dir_path)
+
+
 # if __name__ == "__main__":
 #     _clean_up_all()
 #     exit(0)
 
 
 def _get_dataset_name(path):
-    for name in ["cifar100", "cifar10", 'tinyimagenet']:
+    for name in ["cifar100", "cifar10", "tinyimagenet"]:
         if name in path:
             return name
     raise NotImplementedError(f"Not implemented! {path}")
@@ -111,8 +114,9 @@ def _check_data_order(datas, path):
         _exist_order[dataset_name] = origin
         # print(f"Save order {dataset_name}! {path}")
     else:
-        assert (_exist_order[dataset_name] -
-                origin).abs().max() < 1e-6, f"Order different {dataset_name}! {path}"
+        assert (
+            _exist_order[dataset_name] - origin
+        ).abs().max() < 1e-6, f"Order different {dataset_name}! {path}"
         # print(f"Check order success {dataset_name}! {path}")
 
 
@@ -130,8 +134,7 @@ def process_full_result(x_adv, delta, adv_pred, ori_pred, target, full):
 
 def grep_from_full_result(dir_path, full, split):
     datas = training_utils.load_datas(dir_path, gargs.FULL_RESULT_NAMES)
-    _check_datas(datas, after=True, log_path=os.path.join(
-        dir_path, 'attack_acc.log'))
+    _check_datas(datas, after=True, log_path=os.path.join(dir_path, "attack_acc.log"))
     _check_data_order(datas, dir_path)
     if not split:
         return [process_full_result(*datas, full)]
@@ -170,14 +173,16 @@ def _concat_and_save(save_dir, datas, split):
     if not split:
         _concat_and_save_patch(save_dir, datas[0], gargs.NO_SPLIT_OUTPUT_NAMES)
     else:
-        _concat_and_save_patch(
-            save_dir, datas[0], gargs.SPLIT_OUTPUT_NAMES[:3])
-        _concat_and_save_patch(
-            save_dir, datas[1], gargs.SPLIT_OUTPUT_NAMES[3:])
+        _concat_and_save_patch(save_dir, datas[0], gargs.SPLIT_OUTPUT_NAMES[:3])
+        _concat_and_save_patch(save_dir, datas[1], gargs.SPLIT_OUTPUT_NAMES[3:])
 
 
 def load_dir_data(dir_path, full, split):
-    if split or full or training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES):
+    if (
+        split
+        or full
+        or training_utils.check_data_exists(dir_path, gargs.FULL_RESULT_NAMES)
+    ):
         return grep_from_full_result(dir_path, full, split)
     else:
         raise NotImplementedError("No partial!!!!")
@@ -197,16 +202,17 @@ def grep_data_correct(dir, save_dir, robust, full_data, split):
         for idx_a, act in enumerate(acts):
             for idx_p, prune in enumerate(prunes):
                 dir_name = training_utils.get_model_name(
-                    2, k, act, prune, robust=robust)
+                    2, k, act, prune, robust=robust
+                )
                 dir_path = os.path.join(dir, dir_name)
                 assert training_utils.check_data_exists(
-                    dir_path, gargs.FULL_RESULT_NAMES)
+                    dir_path, gargs.FULL_RESULT_NAMES
+                )
                 # or (not full_data and training_utils.check_data_exists(dir_path, gargs.PARTIAL_RESULT_NAMES))
                 dirs.append(dir_path)
                 lbs.append([idx_k, idx_a, idx_p])
 
-    export_datas = [[[], [], []]] if not split else [
-        [[], [], []], [[], [], []]]
+    export_datas = [[[], [], []]] if not split else [[[], [], []], [[], [], []]]
 
     for dir, lb in tqdm.tqdm(list(zip(dirs, lbs))):
         datas = load_dir_data(dir, full=full_data, split=split)
@@ -242,8 +248,9 @@ def grep_setting(dataset, arch, setting_name, attacks, split):
         print(f"Grep to: '{grep_save_dir}'")
 
         try:
-            grep_data_correct(grep_atk_dir, grep_save_dir,
-                              robust=robust, full_data=full, split=split)
+            grep_data_correct(
+                grep_atk_dir, grep_save_dir, robust=robust, full_data=full, split=split
+            )
         except AssertionError as inst:
             print(inst)
         except Exception as inst:
@@ -254,5 +261,6 @@ def grep_setting(dataset, arch, setting_name, attacks, split):
 
 if __name__ == "__main__":
     for exp in gargs.EXPS:
-        grep_setting(exp['data'], exp['arch'], exp['setting'],
-                     exp["attacks"], split=True)
+        grep_setting(
+            exp["data"], exp["arch"], exp["setting"], exp["attacks"], split=True
+        )

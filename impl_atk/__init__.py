@@ -1,1 +1,1 @@
-from .zosgd import ZoSignSgd, ZoSgd, Nes
+from .zosgd import Nes, ZoSgd, ZoSignSgd

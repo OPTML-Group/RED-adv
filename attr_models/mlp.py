@@ -1,6 +1,6 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class MLP(nn.Module):
@@ -12,7 +12,7 @@ class MLP(nn.Module):
             nn.ReLU(),
             nn.Linear(128, 128),
             nn.ReLU(),
-            nn.Linear(128, num_class * num_output)
+            nn.Linear(128, num_class * num_output),
         )
         self.num_class = num_class
         self.num_output = num_output
@@ -23,4 +23,5 @@ class MLP(nn.Module):
 
 
 class Flatten(torch.nn.Module):
-    def forward(self, x): return x.view(x.size(0), -1)
+    def forward(self, x):
+        return x.view(x.size(0), -1)

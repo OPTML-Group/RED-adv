@@ -1,16 +1,16 @@
-import os
 import copy
-import time
-import tqdm
-import utils
+import os
 import shutil
+import time
 
 import torch
-from torch.cuda.amp import autocast, GradScaler
+import tqdm
+from torch.cuda.amp import GradScaler, autocast
 from torch.utils import tensorboard
 
-import pruner
 import attacks
+import pruner
+import utils
 
 
 def load_checkpoint(train_params, path, model_only=False):
@@ -43,11 +43,13 @@ def save_checkpoint(train_params, path, epoch, model_only=False):
 
 
 def get_training_params(model, name, args, use_scaler=True):
-    optimizer = torch.optim.SGD(model.parameters(), args.lr,
-                                momentum=args.momentum,
-                                weight_decay=args.weight_decay)
-    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-        optimizer, T_max=args.epochs)
+    optimizer = torch.optim.SGD(
+        model.parameters(),
+        args.lr,
+        momentum=args.momentum,
+        weight_decay=args.weight_decay,
+    )
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epochs)
     scaler = None
     if use_scaler:
         scaler = GradScaler()
@@ -65,10 +67,10 @@ def get_training_params(model, name, args, use_scaler=True):
 
     attack = None
     if args.robust_train:
-        attack = attacks.atk.PGD(model, eps=8/255, alpha=1/255, steps=10)
+        attack = attacks.atk.PGD(model, eps=8 / 255, alpha=1 / 255, steps=10)
 
-        CIFAR_MEAN_1 = [125.307/255, 122.961/255, 113.8575/255]
-        CIFAR_STD_1 = [51.5865/255, 50.847/255, 51.255/255]
+        CIFAR_MEAN_1 = [125.307 / 255, 122.961 / 255, 113.8575 / 255]
+        CIFAR_STD_1 = [51.5865 / 255, 50.847 / 255, 51.255 / 255]
 
         attack.set_normalization_used(mean=CIFAR_MEAN_1, std=CIFAR_STD_1)
 
@@ -99,18 +101,18 @@ def train_epoch(train_params, train_loader, epoch):
     losses = utils.AverageMeter()
     top1 = utils.AverageMeter()
 
-    criterion = train_params['criterion']
-    optimizer = train_params['optimizer']
-    scaler = train_params['scaler']
-    writer = train_params['writer']
-    model = train_params['model']
-    name = train_params['name']
-    atk = train_params['attack']
+    criterion = train_params["criterion"]
+    optimizer = train_params["optimizer"]
+    scaler = train_params["scaler"]
+    writer = train_params["writer"]
+    model = train_params["model"]
+    name = train_params["name"]
+    atk = train_params["attack"]
 
     # switch to train mode
     model.train()
     n_iters = len(train_loader)
-    lr = optimizer.state_dict()['param_groups'][0]['lr']
+    lr = optimizer.state_dict()["param_groups"][0]["lr"]
 
     for image, target in tqdm.tqdm(train_loader):
         image = image.cuda()
@@ -153,12 +155,9 @@ def train_epoch(train_params, train_loader, epoch):
             #         writer, 'Training_iter/loss', losses.val, epoch * (n_iters) + i)
 
     if writer is not None:
-        utils.plot_tensorboard(
-            writer, f'{name}_train_epoch/acc', top1.avg, epoch)
-        utils.plot_tensorboard(
-            writer, f'{name}_train_epoch/loss', losses.avg, epoch)
-        utils.plot_tensorboard(
-            writer, f'{name}_train_epoch/lr', lr, epoch)
+        utils.plot_tensorboard(writer, f"{name}_train_epoch/acc", top1.avg, epoch)
+        utils.plot_tensorboard(writer, f"{name}_train_epoch/loss", losses.avg, epoch)
+        utils.plot_tensorboard(writer, f"{name}_train_epoch/lr", lr, epoch)
 
     return top1.avg, losses.avg
 
@@ -198,20 +197,23 @@ def train_with_rewind(train_params, loaders, args):
     train_loader = loaders["train"]
     test_loader = loaders["test"]
 
-    scheduler = train_params['scheduler']
-    writer = train_params['writer']
+    scheduler = train_params["scheduler"]
+    writer = train_params["writer"]
     criterion = train_params["criterion"]
     model = train_params["model"]
-    name = train_params['name']
+    name = train_params["name"]
     start_epoch = train_params["start_epoch"]
-    atk = train_params['attack']
+    atk = train_params["attack"]
 
     save_dir = os.path.join(args.save_dir, name)
 
     epochs = args.epochs
     rewind = args.rewind_epoch if hasattr(args, "rewind_epoch") else None
-    rewind_path = os.path.join(
-        save_dir, f'rewind_weight_{rewind}.pt') if rewind is not None else None
+    rewind_path = (
+        os.path.join(save_dir, f"rewind_weight_{rewind}.pt")
+        if rewind is not None
+        else None
+    )
 
     for epoch in range(start_epoch, epochs):
         print(f"Epoch: {epoch}")
@@ -225,25 +227,25 @@ def train_with_rewind(train_params, loaders, args):
         print("Test: Accuracy: {} Loss: {}".format(test_acc, test_loss))
 
         if writer is not None:
-            utils.plot_tensorboard(
-                writer, f'{name}_test/acc', test_acc, epoch)
-            utils.plot_tensorboard(
-                writer, f'{name}_test/loss', test_loss, epoch)
-            
+            utils.plot_tensorboard(writer, f"{name}_test/acc", test_acc, epoch)
+            utils.plot_tensorboard(writer, f"{name}_test/loss", test_loss, epoch)
+
         if atk is not None:
             attack_acc, attack_loss = validate(model, test_loader, criterion, atk=atk)
             print("Attack: Accuracy: {} Loss: {}".format(attack_acc, attack_loss))
 
             if writer is not None:
                 utils.plot_tensorboard(
-                    writer, f'{name}_test/attack_acc', attack_acc, epoch)
+                    writer, f"{name}_test/attack_acc", attack_acc, epoch
+                )
                 utils.plot_tensorboard(
-                    writer, f'{name}_test/attack_loss', attack_loss, epoch)
+                    writer, f"{name}_test/attack_loss", attack_loss, epoch
+                )
 
         scheduler.step()
-        print("one epoch duration:{}".format(time.time()-start_time))
+        print("one epoch duration:{}".format(time.time() - start_time))
 
-        if (epoch+1) % args.save_freq == 0:
+        if (epoch + 1) % args.save_freq == 0:
             path = os.path.join(save_dir, f"checkpoint_{epoch+1}.pt")
             save_checkpoint(train_params, path, epoch)
 

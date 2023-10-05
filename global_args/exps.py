@@ -6,9 +6,15 @@ PRUNING_RATIOS = [0.0, 0.375, 0.625]
 
 
 VALID_DATASETS = ["cifar10", "cifar100", "tinyimagenet", "mnist"]
-VALID_ARCHITECTURES = ['resnet9', 'resnet20s', 'resnet18', 'vgg11', 'vgg13']#, 'lenet']
+VALID_ARCHITECTURES = [
+    "resnet9",
+    "resnet20s",
+    "resnet18",
+    "vgg11",
+    "vgg13",
+]  # , 'lenet']
 
-VALID_SETTINGS = ['origin', 'robust', 'robust_all']
+VALID_SETTINGS = ["origin", "robust", "robust_all"]
 VALID_ATTR_ARCHS = ["mlp", "lenet", "attrnet", "conv2", "conv4", "resnet9"]
 
 
@@ -21,12 +27,14 @@ def _get_exps():
     default_setting = settings[0]
 
     # default
-    exp_combs = [dict(
-        arch=default_arch,
-        data=datasets[0],
-        setting=default_setting,
-        attacks=_atk.ALL_ATTACKS
-    )]
+    exp_combs = [
+        dict(
+            arch=default_arch,
+            data=datasets[0],
+            setting=default_setting,
+            attacks=_atk.ALL_ATTACKS,
+        )
+    ]
     # arch ablation
     for data in ["cifar10", "cifar100"]:
         if data == "mnist":
@@ -36,14 +44,9 @@ def _get_exps():
         if data == "cifar10":
             atks = atks + _atk.ENSEMBLE_ATTACKS
         for arch in archs[st:]:
-            if arch == 'lenet':
+            if arch == "lenet":
                 continue
-            s = dict(
-                arch=arch,
-                data=data,
-                setting=default_setting,
-                attacks=atks
-            )
+            s = dict(arch=arch, data=data, setting=default_setting, attacks=atks)
             exp_combs.append(s)
     # robust ablation
     for setting in settings[1:]:
@@ -51,7 +54,7 @@ def _get_exps():
             arch=default_arch,
             data=default_data,
             setting=setting,
-            attacks=_atk.WHITEBOX_ATTACKS
+            attacks=_atk.WHITEBOX_ATTACKS,
         )
         exp_combs.append(s)
     # dataset ablation
@@ -63,10 +66,7 @@ def _get_exps():
         else:
             arch = default_arch
         s = dict(
-            arch=arch,
-            data=data,
-            setting=default_setting,
-            attacks=_atk.WHITEBOX_ATTACKS
+            arch=arch, data=data, setting=default_setting, attacks=_atk.WHITEBOX_ATTACKS
         )
         exp_combs.append(s)
     return exp_combs

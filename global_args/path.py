@@ -20,9 +20,20 @@ PARSING_LOG_DIR = _os.path.join(_WORKSPACE_DIR, "test_log")
 
 
 PARTIAL_RESULT_NAMES = ["x_adv.pt", "delta.pt"]
-FULL_RESULT_NAMES = ["adv_all.pt", "delta_all.pt",
-                     "adv_pred.pt", "ori_pred.pt", "targets.pt"]
+FULL_RESULT_NAMES = [
+    "adv_all.pt",
+    "delta_all.pt",
+    "adv_pred.pt",
+    "ori_pred.pt",
+    "targets.pt",
+]
 
 NO_SPLIT_OUTPUT_NAMES = ["x_adv.pt", "delta.pt", "attr_labels.pt"]
-SPLIT_OUTPUT_NAMES = ["x_adv_train.pt", "delta_train.pt", "attr_labels_train.pt",
-                      "x_adv_test.pt", "delta_test.pt", "attr_labels_test.pt"]
+SPLIT_OUTPUT_NAMES = [
+    "x_adv_train.pt",
+    "delta_train.pt",
+    "attr_labels_train.pt",
+    "x_adv_test.pt",
+    "delta_test.pt",
+    "attr_labels_test.pt",
+]

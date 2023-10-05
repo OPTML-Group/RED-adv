@@ -6,7 +6,7 @@ def conv_block(in_channels, out_channels):
         nn.Conv2d(in_channels, out_channels, 3, padding=1),
         nn.BatchNorm2d(out_channels),
         nn.ReLU(),
-        nn.MaxPool2d(2)
+        nn.MaxPool2d(2),
     )
 
 
@@ -21,7 +21,7 @@ class ConvNet4(nn.Module):
             conv_block(64, 64),
             Flatten(),
             nn.Linear(sz * sz * 64, 128),
-            nn.Linear(128, num_class * num_output)
+            nn.Linear(128, num_class * num_output),
         )
         self.num_class = num_class
         self.num_output = num_output
@@ -32,4 +32,5 @@ class ConvNet4(nn.Module):
 
 
 class Flatten(nn.Module):
-    def forward(self, x): return x.view(x.size(0), -1)
+    def forward(self, x):
+        return x.view(x.size(0), -1)

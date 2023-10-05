@@ -1,9 +1,9 @@
-from .utils import *
 from .omp import omp
+from .utils import *
 
 
 def get_prune_method(name):
-    """ method usage:
+    """method usage:
 
     function(model, train_loader, test_loader, criterion, args)"""
     if name == "omp":

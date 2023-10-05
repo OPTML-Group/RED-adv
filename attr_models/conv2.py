@@ -1,6 +1,6 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
 
 
 class AttrNet(nn.Module):
@@ -47,7 +47,7 @@ class ConvNet2(nn.Module):
             nn.MaxPool2d(2),
             Flatten(),
             nn.Linear(sz * sz * 64, 128),
-            nn.Linear(128, num_class * num_output)
+            nn.Linear(128, num_class * num_output),
         )
         self.num_class = num_class
         self.num_output = num_output
@@ -57,5 +57,7 @@ class ConvNet2(nn.Module):
         outputs = x.view([-1, self.num_class, self.num_output])
         return outputs
 
+
 class Flatten(nn.Module):
-    def forward(self, x): return x.view(x.size(0), -1)
+    def forward(self, x):
+        return x.view(x.size(0), -1)

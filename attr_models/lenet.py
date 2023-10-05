@@ -1,6 +1,7 @@
 import torch
-from torch import nn
 import torch.nn.functional as F
+from torch import nn
+
 
 class LeNet(nn.Module):
     def __init__(self, num_channel=3, num_class=5, num_output=3, img_size=32):
@@ -9,7 +10,7 @@ class LeNet(nn.Module):
         self.conv1 = nn.Conv2d(num_channel, 6, kernel_size=5, padding=pd)
         self.conv2 = nn.Conv2d(6, 16, kernel_size=5)
         sz = ((img_size + pd * 2 - 3) // 2 - 3) // 2
-        self.fc1 = nn.Linear(16*sz*sz, 120)
+        self.fc1 = nn.Linear(16 * sz * sz, 120)
         self.fc2 = nn.Linear(120, 84)
         self.fc3 = nn.Linear(84, num_class * num_output)
         self.num_class = num_class

@@ -16,8 +16,7 @@ def fc_block(in_channels, out_channels, act_func):
     )
 
 
-_act_func_dict = {"relu": nn.ReLU, "tanh": nn.Tanh,
-                  "silu": nn.SiLU, "elu": nn.ELU}
+_act_func_dict = {"relu": nn.ReLU, "tanh": nn.Tanh, "silu": nn.SiLU, "elu": nn.ELU}
 
 
 class LeNet(nn.Module):
@@ -28,23 +27,23 @@ class LeNet(nn.Module):
         self.num_fc = args.num_fc
 
         self.act_func = _act_func_dict[args.act_func]
-        size = 28 - (self.ks-1) * self.num_conv
+        size = 28 - (self.ks - 1) * self.num_conv
         layers = []
         last_channel = 1
         _conv_hidden_channel = 32
         _fc_hidden_channel = 64
 
         for _ in range(self.num_conv):
-            layers.append(conv_block(
-                last_channel, _conv_hidden_channel, self.ks, self.act_func))
+            layers.append(
+                conv_block(last_channel, _conv_hidden_channel, self.ks, self.act_func)
+            )
             last_channel = _conv_hidden_channel
 
         layers.append(Flatten())
-        last_channel = last_channel * size ** 2
+        last_channel = last_channel * size**2
 
         for _ in range(self.num_fc - 1):
-            layers.append(
-                fc_block(last_channel, _fc_hidden_channel, self.act_func))
+            layers.append(fc_block(last_channel, _fc_hidden_channel, self.act_func))
             last_channel = _fc_hidden_channel
 
         layers.append(fc_block(last_channel, 10, self.act_func))
@@ -56,7 +55,9 @@ class LeNet(nn.Module):
 
 
 class Flatten(nn.Module):
-    def forward(self, x): return x.view(x.size(0), -1)
+    def forward(self, x):
+        return x.view(x.size(0), -1)
+
 
 # if __name__ == "__main__":
 #     class Args: pass

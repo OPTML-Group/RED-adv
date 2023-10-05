@@ -1,12 +1,12 @@
-import tqdm
 import os
 import shutil
 
 import torch
-
 import torchattack.torchattacks as atk
-import impl_atk
+import tqdm
+
 import global_args as gargs
+import impl_atk
 
 
 def generate_attack_images(model, loader, atk, save_dir=None):
@@ -19,10 +19,17 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     path_adv_pred = os.path.join(save_dir, "adv_pred.pt")
     path_target = os.path.join(save_dir, "targets.pt")
 
-    path_acc = os.path.join(save_dir, 'attack_acc.log')
+    path_acc = os.path.join(save_dir, "attack_acc.log")
     # if os.path.exists(path_x_adv) and os.path.exists(path_delta) and os.path.exists(path_target) and os.path.exists(path_acc):
     #     return torch.load(path_x_adv), torch.load(path_delta), torch.load(path_target)
-    if os.path.exists(path_target) and os.path.exists(path_delta_all) and os.path.exists(path_adv_all) and os.path.exists(path_adv_pred) and os.path.exists(path_ori_pred) and os.path.exists(path_acc):
+    if (
+        os.path.exists(path_target)
+        and os.path.exists(path_delta_all)
+        and os.path.exists(path_adv_all)
+        and os.path.exists(path_adv_pred)
+        and os.path.exists(path_ori_pred)
+        and os.path.exists(path_acc)
+    ):
         return
     shutil.rmtree(save_dir, ignore_errors=True)
 
@@ -32,7 +39,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
     n_datas, n_correct_success, n_success = 0, 0, 0
 
     model.eval()
-    for image, target in tqdm.tqdm(loader['test']):
+    for image, target in tqdm.tqdm(loader["test"]):
         image = image.float().cuda()
         target = target.long().cuda()
 
@@ -52,7 +59,7 @@ def generate_attack_images(model, loader, atk, save_dir=None):
             n_correct_success += sum(idx).item()
             n_success += sum(idx_adv).item()
 
-            delta = image_adv-image
+            delta = image_adv - image
 
             # adv_delta = delta[idx]
             # x_adv = image_adv[idx]
@@ -89,9 +96,10 @@ def generate_attack_images(model, loader, atk, save_dir=None):
         torch.save(adv_preds, path_adv_pred)
         torch.save(ori_preds, path_ori_pred)
 
-        with open(path_acc, 'w') as fout:
-            print("n_corr_succ: {}".format(
-                n_correct_success / n_datas * 100), file=fout)
+        with open(path_acc, "w") as fout:
+            print(
+                "n_corr_succ: {}".format(n_correct_success / n_datas * 100), file=fout
+            )
             print("n_succ: {}".format(n_success / n_datas * 100), file=fout)
 
     print("n_corr_succ: {}".format(n_correct_success / n_datas * 100))
@@ -101,9 +109,14 @@ def generate_attack_images(model, loader, atk, save_dir=None):
 
 def get_attack(model, name, args):
     if name == "pgd":
-        print("PGD attack: eps: {}, alpha: {}, steps: {}".format(
-            args.eps, args.alpha, args.steps))
-        return atk.PGD(model, eps=args.eps/255, alpha=args.alpha/255, steps=args.steps)
+        print(
+            "PGD attack: eps: {}, alpha: {}, steps: {}".format(
+                args.eps, args.alpha, args.steps
+            )
+        )
+        return atk.PGD(
+            model, eps=args.eps / 255, alpha=args.alpha / 255, steps=args.steps
+        )
     elif name == "cw":
         return atk.CW(model, c=args.cw_c, kappa=args.cw_kappa)
     elif name == "pgdl2":
@@ -111,10 +124,9 @@ def get_attack(model, name, args):
     elif name == "autoattack":
         if args.norm == "Linf":
             args.eps /= 255
-        return atk.AutoAttack(
-            model, norm=args.norm, eps=args.eps)  # AutoAttack
+        return atk.AutoAttack(model, norm=args.norm, eps=args.eps)  # AutoAttack
     elif name == "fgsm":
-        return atk.FGSM(model, eps=args.eps/255)  # FGSM (l_inf)
+        return atk.FGSM(model, eps=args.eps / 255)  # FGSM (l_inf)
     elif name == "square":
         if args.norm == "Linf":
             args.eps /= 255
@@ -132,14 +144,13 @@ def get_attack(model, name, args):
             args.eps /= 255
         return impl_atk.Nes(model, eps=args.eps, norm=args.norm)
     else:
-        raise NotImplementedError(
-            "Attack method {} is not implemented!".format(name))
+        raise NotImplementedError("Attack method {} is not implemented!".format(name))
 
 
 def get_attack_normalized(model, name, args):
     atk = get_attack(model, name, args)
     atk.set_normalization_used(
-        mean=gargs.DATASET_MEAN[args.dataset], std=gargs.DATASET_STD[args.dataset])
+        mean=gargs.DATASET_MEAN[args.dataset], std=gargs.DATASET_STD[args.dataset]
+    )
 
     return atk
-    

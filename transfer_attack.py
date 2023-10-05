@@ -1,17 +1,16 @@
 import os
+
+import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-import matplotlib.pyplot as plt
-
 import torch
 import torch.utils.data
 
+import evaluation
 import global_args as gargs
 import models
 import pruner
 import training_utils
-
-import evaluation
 
 
 class TransferAttack(evaluation.EvaluateParsing):
@@ -29,9 +28,9 @@ class TransferAttack(evaluation.EvaluateParsing):
             for idx_a, act in enumerate(acts):
                 for idx_p, prune in enumerate(prunes):
                     model_name = training_utils.get_model_name(
-                        2, k, act, prune, robust=robust)
-                    self.model_names.append(
-                        ((idx_k, idx_a, idx_p), model_name))
+                        2, k, act, prune, robust=robust
+                    )
+                    self.model_names.append(((idx_k, idx_a, idx_p), model_name))
                     self.model_setting[model_name] = (k, act, prune)
                     self.name_mapping[(idx_k, idx_a, idx_p)] = model_name
 
@@ -40,6 +39,7 @@ class TransferAttack(evaluation.EvaluateParsing):
 
         class Arg:
             pass
+
         args = Arg()
         args.num_classes = gargs.DATASET_NUM_CLASSES[self.dataset]
         args.kernel_size = k
@@ -53,7 +53,11 @@ class TransferAttack(evaluation.EvaluateParsing):
         last_epoch = 100 if self.dataset == "tinyimagenet" else 75
 
         model_path = os.path.join(
-            gargs.MODEL_DIR, self.data_arch, f"{model_name}_omp_2", f"checkpoint_{last_epoch}.pt")
+            gargs.MODEL_DIR,
+            self.data_arch,
+            f"{model_name}_omp_2",
+            f"checkpoint_{last_epoch}.pt",
+        )
 
         print(f"Load model from {model_path}")
         item = torch.load(model_path)["model"]
@@ -65,10 +69,10 @@ class TransferAttack(evaluation.EvaluateParsing):
 
     def load_data(self, model_name):
         atk_data_dir = os.path.join(
-            gargs.ATK_DIR, self.data_arch, self.atk_name, model_name)
+            gargs.ATK_DIR, self.data_arch, self.atk_name, model_name
+        )
         print(f"Load from {atk_data_dir}.")
-        datas = training_utils.load_datas(
-            atk_data_dir, gargs.FULL_RESULT_NAMES)
+        datas = training_utils.load_datas(atk_data_dir, gargs.FULL_RESULT_NAMES)
         split_n = int(len(datas[0]) * 0.8)
         d_test = [a[split_n:] for a in datas]
         x_adv, delta, adv_pred, ori_pred, target = d_test
@@ -100,10 +104,10 @@ class TransferAttack(evaluation.EvaluateParsing):
         succ = pred.ne(targets)
         asr = succ.float().mean()
         succ_preds = preds[succ]
-        pred_as_data = (succ_preds == torch.LongTensor(
-            data_label)).all(dim=-1)  # succ
-        pred_as_model = (succ_preds == torch.LongTensor(
-            model_label)).all(dim=-1)  # mis class
+        pred_as_data = (succ_preds == torch.LongTensor(data_label)).all(dim=-1)  # succ
+        pred_as_model = (succ_preds == torch.LongTensor(model_label)).all(
+            dim=-1
+        )  # mis class
         succ_rate = pred_as_data.float().mean()
         transfer_rate = pred_as_model.float().mean()
         return asr, succ_rate, transfer_rate
@@ -115,9 +119,9 @@ class TransferAttack(evaluation.EvaluateParsing):
             model = self.load_victim_model(model_name)
             for idx_data, (data_label, data_name) in enumerate(self.model_names):
                 asr, succ_rate, transfer_rate = self.transfer_attack_single(
-                    model, model_label, data_label, data_name)
-                results[idx_data, idx_model] = np.array(
-                    (asr, succ_rate, transfer_rate))
+                    model, model_label, data_label, data_name
+                )
+                results[idx_data, idx_model] = np.array((asr, succ_rate, transfer_rate))
 
         self.attack_results = results
 
@@ -140,11 +144,18 @@ class TransferAttack(evaluation.EvaluateParsing):
             plt.ylabel("Origin Victim Model", fontsize=13)
             plt.xlabel("Transffered Victim Model", fontsize=13)
             # plt.xticks(rotation=45, ha='right')
-            plt.savefig(os.path.join(save_dir, name + ".png"),
-                        bbox_inches='tight', dpi=300)
+            plt.savefig(
+                os.path.join(save_dir, name + ".png"), bbox_inches="tight", dpi=300
+            )
 
         xs, ys, names = [], [], []
-        for i, name in enumerate([None, "Parsed as Origin Victim Model", "Parsed as Transferred Victim Model"]):
+        for i, name in enumerate(
+            [
+                None,
+                "Parsed as Origin Victim Model",
+                "Parsed as Transferred Victim Model",
+            ]
+        ):
             if i == 0:
                 continue
             a = self.attack_results[:, :, i]
@@ -164,16 +175,22 @@ class TransferAttack(evaluation.EvaluateParsing):
         ys = np.concatenate(ys, axis=0) * 100
         names = np.array(names)
         plt.clf()
-        plt.plot([-10, 110], [-10, 110], linestyle='--', color='black')
+        plt.plot([-10, 110], [-10, 110], linestyle="--", color="black")
         x_name = "Parsing Accuracy on Victim Model(%)"
         y_name = "Ratio of Parsing Result(%)"
         legend_name = "Parsing Result Type"
-        sns.scatterplot(data={x_name: xs, y_name: ys, legend_name: names},
-                        x=x_name, y=y_name, hue=legend_name, style=legend_name)
+        sns.scatterplot(
+            data={x_name: xs, y_name: ys, legend_name: names},
+            x=x_name,
+            y=y_name,
+            hue=legend_name,
+            style=legend_name,
+        )
         plt.xlim(-5, 105)
         plt.ylim(-5, 105)
-        plt.savefig(os.path.join(save_dir, "correlation" + ".png"),
-                    bbox_inches='tight', dpi=300)
+        plt.savefig(
+            os.path.join(save_dir, "correlation" + ".png"), bbox_inches="tight", dpi=300
+        )
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 import trainer
+
 from . import utils
 
 
@@ -6,10 +7,10 @@ def prune_model(model, args):
     ratio = args.pruning_ratio
 
     if args.structured_pruning:
-        print('Structured pruning')
+        print("Structured pruning")
         utils.pruning_model_structured(model, ratio)
     else:
-        print('L1 pruning')
+        print("L1 pruning")
         utils.pruning_model(model, ratio)
 
     utils.check_sparsity(model)
